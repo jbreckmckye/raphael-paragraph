@@ -4,6 +4,6 @@ module.exports.arrayForEach = function arrayForEach(array, fn) { // Shimmed for 
 	}
 };
 
-function arrayLast(array) {
+module.exports.arrayLast = function arrayLast(array) {
 	return array[array.length - 1];
-}
+};
