@@ -1,6 +1,5 @@
 module.exports = TextCanvas;
 
-var LineSet = require('./LineSet.js');
 var util = require('./util.js');
 
 function TextCanvas(paper, x, y, lineHeight) {
