@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Raphael-Paragraph demo</title>
+        <script src="raphael-min.js"></script>
+        <script src="../dist/raphael-paragraph.js"></script>
+    </head>
+    <body>
+        <div id="canvas">
+        	<!-- SVG element will be painted here -->
+        </div>
+        <script>
+        	var paper = new Raphael('canvas', 640 , 960);
+        	var demoText = 'April is the cruellest month, breeding lilacs out of the dead land, mixing memory with desire, stirring dull roots with spring rain. Supercalifragilisticexpialodocious!'
+        	paper.paragraph(320, 240, demoText, 90, 24, 16);
+        </script>
+    </body>
+</html>

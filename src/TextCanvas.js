@@ -2,18 +2,21 @@ module.exports = TextCanvas;
 
 var util = require('./util.js');
 
-function TextCanvas(paper, x, y, lineHeight) {
+function TextCanvas(paper, x, y, lineHeight, fontSize) {
 	var that = this;
 	var lines = paper.set();
 	var nextLineY = y;
 
 	function removeAllLines() {
 		lines.remove();
+		// .remove() leaves handles to the elements within the set, so we reinitialize it
+		lines = paper.set(); 
 		nextLineY = y;
 	};
 
 	this.addLine = function addLine() {
 		var newLine = paper.text(x, nextLineY, '');
+		newLine.attr('font-size', fontSize);
 		lines.push(newLine);
 		nextLineY += lineHeight;
 	};
@@ -47,7 +50,7 @@ function TextCanvas(paper, x, y, lineHeight) {
 	};
 }
 
-function setText(element, text) {
+function setText(element, newText) {
 	element.attr('text', newText);
 }
 

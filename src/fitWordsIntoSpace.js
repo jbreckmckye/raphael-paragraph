@@ -22,7 +22,7 @@ function fitWordsIntoSpace(words, width, textCanvas) {
 
 function addWordToCanvasUsingFirstFittingStrategy(word, textCanvas, width) {
 	var strategies = [addSpaceThenWord, addNewlineThenWord];
-	var defaultStrategy = addSpaceThenWord;
+	var defaultStrategy = addNewlineThenWord;
 
 	var wordHasBeenFitted = false;
 	var canvasState = textCanvas.getLineTexts();
@@ -34,10 +34,10 @@ function addWordToCanvasUsingFirstFittingStrategy(word, textCanvas, width) {
 	}
 	if (strategies.length === 0 && wordHasBeenFitted === false) {
 		// If we've run out of options
-		defaultStrategy();
+		defaultStrategy(textCanvas, word);
 	}
 
-	function useNextStategy() {
+	function useNextStrategy() {
 		var strategyInUse = strategies.shift();
 		strategyInUse(textCanvas, word);
 	}
@@ -46,6 +46,12 @@ function addWordToCanvasUsingFirstFittingStrategy(word, textCanvas, width) {
 		if (wordHasBeenFitted === false) {
 			textCanvas.createLines(canvasState);
 		}
+	}
+
+	function testCanvasBounds() {
+		var canvasBBox = textCanvas.getBBox();
+		var canvasWidth = canvasBBox.x2 - canvasBBox.x;
+		return (canvasWidth <= width);
 	}
 	
 }
