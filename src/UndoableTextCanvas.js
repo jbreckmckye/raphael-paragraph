@@ -5,20 +5,24 @@ var TextCanvas = require('./TextCanvas.js');
 function UndoableTextCanvas(paper, x, y, lineHeight, styles) {
 	var states = [];
 	var undoableTextCanvas = new TextCanvas(paper, x, y, lineHeight, styles);
-	var blankState = undoableTextCanvas.getLineTexts();
+	var blankState = undoableTextCanvas.getState();
 
-	undoableTextCanvas.createUndoPoint = function createUndoPoint() {
-		var state = undoableTextCanvas.getLineTexts();
+	undoableTextCanvas.saveNewState = function saveState() {
+		var state = undoableTextCanvas.getState();
 		states.push(state);
 	};
 
-	undoableTextCanvas.undo = function undo() {
-		var lastState = states.pop() || blankState;
-		undoableTextCanvas.createLines(lastState);
+	undoableTextCanvas.restoreLastSavedState = function restoreState() {
+		var lastState = states[states.length - 1] || blankState;
+		undoableTextCanvas.restoreState(lastState);
 		return lastState;
 	};
 
-	undoableTextCanvas.createUndoPoint(); // initialize as blank set
+	undoableTextCanvas.dropLastSavedState = function dropLastSavedState() {
+		return states.pop();
+	};
+
+	states.push(blankState);
 
 	return undoableTextCanvas;
 }

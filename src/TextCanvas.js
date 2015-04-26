@@ -21,7 +21,7 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		setText(currentLine, newText);
 	};
 
-	this.createLines = function createLines(lineTexts) {
+	this.restoreState = function createLines(lineTexts) {
 		removeAllLines();
 		util.arrayForEach(lineTexts, function(lineText){
 			that.addLine();
@@ -38,7 +38,7 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		};
 	};
 
-	this.getLineTexts = function getLineTexts() {
+	this.getState = function getLineTexts() {
 		var texts = [];
 		lines.forEach(function(line){
 			var lineText = getText(line);
