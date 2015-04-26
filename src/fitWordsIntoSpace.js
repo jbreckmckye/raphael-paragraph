@@ -6,6 +6,9 @@ var util = require('./util.js');
 var addWord = require('./textAdditionStrategies/addWord.js');
 var addSpaceThenWord = require('./textAdditionStrategies/addSpaceThenWord.js');
 var addBreakThenWord = require('./textAdditionStrategies/addBreakThenWord.js');
+var ellipsizePreviousWord = require('./textAdditionStrategies/ellipsizePreviousWord.js');
+var addTruncatedWord = require('./textAdditionStrategies/addTruncatedWord.js');
+var addSpaceAndTruncatedWord = require('./textAdditionStrategies/addSpaceAndTruncatedWord.js');
 
 function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
 	var outOfSpace = false;
@@ -72,67 +75,6 @@ function tryWordStrategies(strategies, fallbackWordStrategy, word, addedWords, b
 
 	return outOfSpace;
 }
-
-function addTruncatedWord(word, textCanvas, boundsTest) {
-	var getTruncatedFormsLongestFirst = require('./getTruncatedFormsLongestFirst');
-	var wordAddedSuccessfully = false;
-
-	var characters = word.split('');
-	var formsToTryLongestFirst = getTruncatedFormsLongestFirst(characters);
-
-	util.arrayForEach(formsToTryLongestFirst, function(form){
-		if (wordAddedSuccessfully === false) {
-			tryForm(form);
-			wordAddedSuccessfully = boundsTest();
-			undoFormIfUnsuccessful();
-		}
-	});
-
-	return wordAddedSuccessfully;
-
-	function tryForm(form) {
-		textCanvas.addTextToLine(form);
-	}
-
-	function undoFormIfUnsuccessful() {
-		if (wordAddedSuccessfully === false) {
-			textCanvas.restoreLastSavedState();
-		}
-	}
-}
-
-function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
-	textCanvas.addTextToLine(' ');
-	textCanvas.saveNewState(); // set baseline as having the space
-	var wordAddedSuccessfully = addTruncatedWord(word, textCanvas, boundsTest);
-	if (wordAddedSuccessfully === false) {
-		// If failed, remove the space
-		textCanvas.dropLastSavedState();
-		textCanvas.restoreLastSavedState();
-	}
-	return wordAddedSuccessfully;
-}
-
-function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
-	var wordAddedSuccessfully;
-	var previousWord = addedWords.pop();
-	
-	if (previousWord === undefined) {
-		wordAddedSuccessfully = false;
-	} else {
-		textCanvas.dropLastSavedState();
-		textCanvas.restoreLastSavedState();
-		wordAddedSuccessfully = addSpaceAndTruncatedWord(previousWord, textCanvas, boundsTest);
-		if (wordAddedSuccessfully === false) {
-			wordAddedSuccessfully = truncatePreviousWordsAndAddEllipsis(word, textCanvas, boundsText, addedWords);
-		}
-	}
-
-	return wordAddedSuccessfully;
-}
-
-ellipsizePreviousWord.truncatesWord = true;
-
 
 function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
 	var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);

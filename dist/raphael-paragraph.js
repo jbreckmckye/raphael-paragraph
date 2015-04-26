@@ -130,7 +130,7 @@
 
 	module.exports = UndoableTextCanvas;
 
-	var TextCanvas = __webpack_require__(11);
+	var TextCanvas = __webpack_require__(7);
 
 	function UndoableTextCanvas(paper, x, y, lineHeight, styles) {
 		var states = [];
@@ -166,9 +166,12 @@
 	var util = __webpack_require__(5);
 
 	// Text addition strategies
-	var addWord = __webpack_require__(7);
-	var addSpaceThenWord = __webpack_require__(8);
-	var addBreakThenWord = __webpack_require__(9);
+	var addWord = __webpack_require__(8);
+	var addSpaceThenWord = __webpack_require__(9);
+	var addBreakThenWord = __webpack_require__(10);
+	var ellipsizePreviousWord = __webpack_require__(11);
+	var addTruncatedWord = __webpack_require__(12);
+	var addSpaceAndTruncatedWord = __webpack_require__(13);
 
 	function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
 		var outOfSpace = false;
@@ -236,65 +239,11 @@
 		return outOfSpace;
 	}
 
-	function addTruncatedWord(word, textCanvas, boundsTest) {
-		var getTruncatedFormsLongestFirst = __webpack_require__(10);
-		var wordAddedSuccessfully = false;
 
-		var characters = word.split('');
-		var formsToTryLongestFirst = getTruncatedFormsLongestFirst(characters);
 
-		util.arrayForEach(formsToTryLongestFirst, function(form){
-			if (wordAddedSuccessfully === false) {
-				tryForm(form);
-				wordAddedSuccessfully = boundsTest();
-				undoFormIfUnsuccessful();
-			}
-		});
 
-		return wordAddedSuccessfully;
 
-		function tryForm(form) {
-			textCanvas.addTextToLine(form);
-		}
 
-		function undoFormIfUnsuccessful() {
-			if (wordAddedSuccessfully === false) {
-				textCanvas.restoreLastSavedState();
-			}
-		}
-	}
-
-	function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
-		textCanvas.addTextToLine(' ');
-		textCanvas.saveNewState(); // set baseline as having the space
-		var wordAddedSuccessfully = addTruncatedWord(word, textCanvas, boundsTest);
-		if (wordAddedSuccessfully === false) {
-			// If failed, remove the space
-			textCanvas.dropLastSavedState();
-			textCanvas.restoreLastSavedState();
-		}
-		return wordAddedSuccessfully;
-	}
-
-	function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
-		var wordAddedSuccessfully;
-		var previousWord = addedWords.pop();
-		
-		if (previousWord === undefined) {
-			wordAddedSuccessfully = false;
-		} else {
-			textCanvas.dropLastSavedState();
-			textCanvas.restoreLastSavedState();
-			wordAddedSuccessfully = addSpaceAndTruncatedWord(previousWord, textCanvas, boundsTest);
-			if (wordAddedSuccessfully === false) {
-				wordAddedSuccessfully = truncatePreviousWordsAndAddEllipsis(word, textCanvas, boundsText, addedWords);
-			}
-		}
-
-		return wordAddedSuccessfully;
-	}
-
-	ellipsizePreviousWord.truncatesWord = true;
 
 
 	function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
@@ -411,69 +360,6 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = addWord;
-
-	function addWord(word, textCanvas) {
-		textCanvas.addTextToLine(word);
-	}
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addSpaceThenWord;
-
-	function addSpaceThenWord(word, textCanvas) {
-		textCanvas.addTextToLine(' ' + word);
-	}
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addBreakThenWord;
-
-	function addBreakThenWord(word, textCanvas) {
-		textCanvas.addLine();
-		textCanvas.addTextToLine(word);
-	}
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = getTruncatedFormsLongestFirst;
-
-	var util = __webpack_require__(5);
-
-	function getTruncatedFormsLongestFirst(characters) {
-		var forms = [];
-		createLeftToRightSubstrings(characters, forms);
-		addEllipsesToForms(forms);
-		forms.reverse();
-		return forms;
-	}
-
-	function createLeftToRightSubstrings(characters, forms) {
-		util.arrayForEach(characters, function(character, index) {
-			var form = '';
-			for (var i = 0; i <= index; i++) {
-				form = form + characters[i];
-			}
-			forms.push(form);
-		});
-	}
-
-	function addEllipsesToForms(forms) {
-		util.arrayForEach(forms, function(form, index, forms){
-			forms[index] = form + '...';
-		});
-	}
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
 	module.exports = TextCanvas;
 
 	var util = __webpack_require__(5);
@@ -543,6 +429,153 @@
 
 	function getText(element) {
 		return element.attr('text');
+	}
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addWord;
+
+	function addWord(word, textCanvas) {
+		textCanvas.addTextToLine(word);
+	}
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addSpaceThenWord;
+
+	function addSpaceThenWord(word, textCanvas) {
+		textCanvas.addTextToLine(' ' + word);
+	}
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addBreakThenWord;
+
+	function addBreakThenWord(word, textCanvas) {
+		textCanvas.addLine();
+		textCanvas.addTextToLine(word);
+	}
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = ellipsizePreviousWord;
+
+	var addSpaceAndTruncatedWord = __webpack_require__(13);
+
+	function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
+		var wordAddedSuccessfully;
+		var previousWord = addedWords.pop();
+		
+		if (previousWord === undefined) {
+			wordAddedSuccessfully = false;
+		} else {
+			textCanvas.dropLastSavedState();
+			textCanvas.restoreLastSavedState();
+			wordAddedSuccessfully = addSpaceAndTruncatedWord(previousWord, textCanvas, boundsTest);
+			if (wordAddedSuccessfully === false) {
+				wordAddedSuccessfully = truncatePreviousWordsAndAddEllipsis(word, textCanvas, boundsText, addedWords);
+			}
+		}
+
+		return wordAddedSuccessfully;
+	}
+
+	ellipsizePreviousWord.truncatesWord = true;
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addTruncatedWord;
+
+	var getTruncatedFormsLongestFirst = __webpack_require__(14);
+	var util = __webpack_require__(5);
+
+	function addTruncatedWord(word, textCanvas, boundsTest) {	
+		var wordAddedSuccessfully = false;
+
+		var characters = word.split('');
+		var formsToTryLongestFirst = getTruncatedFormsLongestFirst(characters);
+
+		util.arrayForEach(formsToTryLongestFirst, function(form){
+			if (wordAddedSuccessfully === false) {
+				tryForm(form);
+				wordAddedSuccessfully = boundsTest();
+				undoFormIfUnsuccessful();
+			}
+		});
+
+		return wordAddedSuccessfully;
+
+		function tryForm(form) {
+			textCanvas.addTextToLine(form);
+		}
+
+		function undoFormIfUnsuccessful() {
+			if (wordAddedSuccessfully === false) {
+				textCanvas.restoreLastSavedState();
+			}
+		}
+	}
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addSpaceAndTruncatedWord;
+
+	var addTruncatedWord = __webpack_require__(12);
+
+	function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
+		textCanvas.addTextToLine(' ');
+		textCanvas.saveNewState(); // set baseline as having the space
+		var wordAddedSuccessfully = addTruncatedWord(word, textCanvas, boundsTest);
+		if (wordAddedSuccessfully === false) {
+			// If failed, remove the space
+			textCanvas.dropLastSavedState();
+			textCanvas.restoreLastSavedState();
+		}
+		return wordAddedSuccessfully;
+	}
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = getTruncatedFormsLongestFirst;
+
+	var util = __webpack_require__(5);
+
+	function getTruncatedFormsLongestFirst(characters) {
+		var forms = [];
+		createLeftToRightSubstrings(characters, forms);
+		addEllipsesToForms(forms);
+		forms.reverse();
+		return forms;
+	}
+
+	function createLeftToRightSubstrings(characters, forms) {
+		util.arrayForEach(characters, function(character, index) {
+			var form = '';
+			for (var i = 0; i <= index; i++) {
+				form = form + characters[i];
+			}
+			forms.push(form);
+		});
+	}
+
+	function addEllipsesToForms(forms) {
+		util.arrayForEach(forms, function(form, index, forms){
+			forms[index] = form + '...';
+		});
 	}
 
 /***/ }
