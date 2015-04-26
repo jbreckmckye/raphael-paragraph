@@ -2,21 +2,14 @@ module.exports = TextCanvas;
 
 var util = require('./util.js');
 
-function TextCanvas(paper, x, y, lineHeight, fontSize) {
+function TextCanvas(paper, x, y, lineHeight, styles) {
 	var that = this;
 	var lines = paper.set();
 	var nextLineY = y;
 
-	function removeAllLines() {
-		lines.remove();
-		// .remove() leaves handles to the elements within the set, so we reinitialize it
-		lines = paper.set(); 
-		nextLineY = y;
-	};
-
 	this.addLine = function addLine() {
 		var newLine = paper.text(x, nextLineY, '');
-		newLine.attr('font-size', fontSize);
+		newLine.attr(styles);
 		lines.push(newLine);
 		nextLineY += lineHeight;
 	};
@@ -36,8 +29,13 @@ function TextCanvas(paper, x, y, lineHeight, fontSize) {
 		});
 	};
 
-	this.getBBox = function getBBox() {
-		return lines.getBBox();
+	this.getLastLineEnd = function getLastLineEnd() {
+		var lastLineIndex = lines.length - 1;
+		var boundingBox = lines[lastLineIndex].getBBox();
+		return {
+			x : boundingBox.x2,
+			y : boundingBox.y2
+		};
 	};
 
 	this.getLineTexts = function getLineTexts() {
@@ -48,6 +46,19 @@ function TextCanvas(paper, x, y, lineHeight, fontSize) {
 		});
 		return texts;
 	};
+
+	this.getElements = function getElements() {
+		return lines;
+	};
+
+	function removeAllLines() {
+		lines.remove();
+		// .remove() leaves handles to the elements within the set, so we reinitialize it
+		lines = paper.set(); 
+		nextLineY = y;
+	};
+
+	this.addLine(); // initialize with a first line available
 }
 
 function setText(element, newText) {

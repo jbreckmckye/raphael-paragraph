@@ -13,8 +13,16 @@
         </div>
         <script>
         	var paper = new Raphael('canvas', 640 , 960);
-        	var demoText = 'April is the cruellest month, breeding lilacs out of the dead land, mixing memory with desire, stirring dull roots with spring rain. Supercalifragilisticexpialodocious!'
-        	paper.paragraph(320, 240, demoText, 90, 24, 16);
+        	var demoText = 'April is the cruellest month, breeding lilacs out of the dead land, mixing memory with desire. Antiantidistestablishamentarianism.'
+        	paper.paragraph({
+                x : 100,
+                y : 100,
+                maxWidth: 200,
+                maxHeight: 900,
+                lineHeight: 16,
+                text : demoText,
+                textStyle : {'font-size': 16}
+            });
         </script>
     </body>
 </html>
