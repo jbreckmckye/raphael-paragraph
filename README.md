@@ -3,7 +3,7 @@ Raphael-paragraph
 
 A plugin for Raphael.js that allows you to create paragraphs of text with word wrapping and vertical line spacing.
 
-**It is work in progress - so don't use it yet**.
+This is still work in progress, but you can use it - though that might be hard before I write up the documentation!
 
 
 What is this for?
