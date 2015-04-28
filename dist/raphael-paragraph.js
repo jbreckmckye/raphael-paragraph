@@ -71,9 +71,6 @@
 		var words = extractWordsFromText(options.text);
 		var undoableTextCanvas = new UndoableTextCanvas(paper, options.x, options.y, options.lineHeight, options.textStyle);
 		var boundsTest = util.curry(lastLineFitsBounds, options.x, options.y, undoableTextCanvas, options.maxWidth, options.maxHeight);
-		// var boundsTest = function() {
-		// 	return lastLineFitsBounds(options.x, options.y, undoableTextCanvas, options.maxWidth, options.maxHeight);
-		// };
 		fitWordsIntoSpace(words, options.maxWidth, options.maxHeight, undoableTextCanvas, boundsTest);
 		return undoableTextCanvas.getElements();
 	}
@@ -131,7 +128,7 @@
 
 	module.exports = UndoableTextCanvas;
 
-	var TextCanvas = __webpack_require__(15);
+	var TextCanvas = __webpack_require__(7);
 
 	function UndoableTextCanvas(paper, x, y, lineHeight, styles) {
 		var states = [];
@@ -165,15 +162,16 @@
 	module.exports = fitWordsIntoSpace;
 
 	var util = __webpack_require__(5);
+
 	// Text addition strategies
-	var addWord = __webpack_require__(7);
-	var addTruncatedWord = __webpack_require__(8);
-	var addSpaceThenWord = __webpack_require__(9);
-	var addBreakThenWord = __webpack_require__(10);
-	var breakWithHyphenOnCurrentLine = __webpack_require__(11);
-	var breakWithHyphenOnNewLine = __webpack_require__(12);
-	var addSpaceAndTruncatedWord = __webpack_require__(13);
-	var ellipsizePreviousWord = __webpack_require__(14);
+	var addWord = __webpack_require__(8);
+	var addTruncatedWord = __webpack_require__(9);
+	var addSpaceThenWord = __webpack_require__(10);
+	var addBreakThenWord = __webpack_require__(11);
+	var breakWithHyphenOnCurrentLine = __webpack_require__(12);
+	var breakWithHyphenOnNewLine = __webpack_require__(13);
+	var addSpaceAndTruncatedWord = __webpack_require__(14);
+	var ellipsizePreviousWord = __webpack_require__(15);
 
 	function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
 		var outOfSpace = false;
@@ -198,31 +196,41 @@
 				fallbackWordStrategy = addBreakThenWord;
 			}
 
-			var outOfSpace = tryWordStrategies(wordStrategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas);
+			var strategyUsed = tryWordStrategies(wordStrategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas);
+			var outOfSpace = (strategyUsed.truncatesWord === true);
 			return outOfSpace;
 		}
 	}
 
 	function tryWordStrategies(strategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas) {
-		var outOfSpace = false;
+		var successfulStrategy = null;
 		var wordAddedSuccessfully = false;
 
-		// Save baseline state
-		undoableTextCanvas.saveNewState();
+		tryEachStrategyUntilOneMakesWordFitSpace();
+		useFallbackIfNoStrategySucceeds();
 
-		util.arrayForEach(strategies, function(strategy){
-			if (wordAddedSuccessfully === false) {			
-				wordAddedSuccessfully = strategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
-				outOfSpace = strategy.truncatesWord === true;
-				testBoundsIfStrategyDoesNotTestItself();
-				undoStrategyIfUnsuccessful();
-			}
-		});
+		return successfulStrategy;
 
-		if (wordAddedSuccessfully === false) {
-			fallbackWordStrategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
-			outOfSpace = true;
+		function tryEachStrategyUntilOneMakesWordFitSpace() {
+			// Save initial state, so we can rollback whenever a strategy fails
+			undoableTextCanvas.saveNewState();
+			// Try each strategy and assign successful strategy once a word fits
+			util.arrayForEach(strategies, function(strategy){
+				if (wordAddedSuccessfully === false) {			
+					wordAddedSuccessfully = strategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
+					testBoundsIfStrategyDoesNotTestItself();
+					setSuccessfulStrategyIfWordFits(strategy);
+					undoStrategyIfUnsuccessful();
+				}
+			});
 		}
+
+		function useFallbackIfNoStrategySucceeds() {
+			if (wordAddedSuccessfully === false) {
+				fallbackWordStrategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
+				successfulStrategy = fallbackWordStrategy;
+			}
+		}	
 
 		function testBoundsIfStrategyDoesNotTestItself() {
 			if (wordAddedSuccessfully === undefined) {
@@ -240,7 +248,11 @@
 			undoableTextCanvas.saveNewState();
 		}
 
-		return outOfSpace;
+		function setSuccessfulStrategyIfWordFits(strategy) {
+			if (wordAddedSuccessfully === true) {
+				successfulStrategy = strategy;
+			}		
+		}	
 	}
 
 /***/ },
@@ -263,7 +275,7 @@
 		return function() {
 			return fn.apply(this, args.concat(Array.prototype.slice.call(arguments, 0)));
 		};
-	}
+	};
 
 /***/ },
 /* 6 */
@@ -284,169 +296,6 @@
 
 /***/ },
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addWord;
-
-	function addWord(word, textCanvas) {
-		textCanvas.addTextToLine(word);
-	}
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addTruncatedWord;
-
-	var getTruncatedFormsLongestFirst = __webpack_require__(16);
-	var util = __webpack_require__(5);
-
-	function addTruncatedWord(word, textCanvas, boundsTest) {	
-		var wordAddedSuccessfully = false;
-
-		var characters = word.split('');
-		var formsToTryLongestFirst = getTruncatedFormsLongestFirst(characters);
-
-		util.arrayForEach(formsToTryLongestFirst, function(form){
-			if (wordAddedSuccessfully === false) {
-				tryForm(form);
-				wordAddedSuccessfully = boundsTest();
-				undoFormIfUnsuccessful();
-			}
-		});
-
-		return wordAddedSuccessfully;
-
-		function tryForm(form) {
-			textCanvas.addTextToLine(form);
-		}
-
-		function undoFormIfUnsuccessful() {
-			if (wordAddedSuccessfully === false) {
-				textCanvas.restoreLastSavedState();
-			}
-		}
-	}
-
-	addTruncatedWord.truncatesWord = true;
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addSpaceThenWord;
-
-	function addSpaceThenWord(word, textCanvas) {
-		textCanvas.addTextToLine(' ' + word);
-	}
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addBreakThenWord;
-
-	function addBreakThenWord(word, textCanvas) {
-		textCanvas.addLine();
-		textCanvas.addTextToLine(word);
-	}
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = breakWithHyphenOnCurrentLine;
-
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
-
-	function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
-		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
-		return wordAddedSuccessfully;
-
-		function addBreakThenHyphenatedWord(form) {
-			textCanvas.addTextToLine(' ');
-			textCanvas.addTextToLine(form[0]);
-			textCanvas.addTextToLine('-');
-			textCanvas.addLine();
-			textCanvas.addTextToLine(form[1]);
-		}
-	}
-
-	breakWithHyphenOnCurrentLine.truncatesWord = true;
-
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = breakWithHyphenOnNewLine;
-
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
-
-	function breakWithHyphenOnNewLine(word, textCanvas, boundsTest) {
-		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
-		return wordAddedSuccessfully;
-
-		function addBreakThenHyphenatedWord(form) {
-			textCanvas.addLine();
-			textCanvas.addTextToLine(form[0]);
-			textCanvas.addTextToLine('-');
-			textCanvas.addLine();
-			textCanvas.addTextToLine(form[1]);
-		}
-	}
-
-	breakWithHyphenOnNewLine.truncatesWord = true;
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = addSpaceAndTruncatedWord;
-
-	var addTruncatedWord = __webpack_require__(8);
-
-	function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
-		textCanvas.addTextToLine(' ');
-		textCanvas.saveNewState(); // set baseline as having the space
-		var wordAddedSuccessfully = addTruncatedWord(word, textCanvas, boundsTest);
-		if (wordAddedSuccessfully === false) {
-			// If failed, remove the space
-			textCanvas.dropLastSavedState();
-			textCanvas.restoreLastSavedState();
-		}
-		return wordAddedSuccessfully;
-	}
-
-/***/ },
-/* 14 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = ellipsizePreviousWord;
-
-	var addSpaceAndTruncatedWord = __webpack_require__(13);
-
-	function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
-		var wordAddedSuccessfully;
-		var previousWord = addedWords.pop();
-		
-		if (previousWord === undefined) {
-			wordAddedSuccessfully = false;
-		} else {
-			textCanvas.dropLastSavedState();
-			textCanvas.restoreLastSavedState();
-			wordAddedSuccessfully = addSpaceAndTruncatedWord(previousWord, textCanvas, boundsTest);
-			if (wordAddedSuccessfully === false) {
-				wordAddedSuccessfully = truncatePreviousWordsAndAddEllipsis(word, textCanvas, boundsText, addedWords);
-			}
-		}
-
-		return wordAddedSuccessfully;
-	}
-
-	ellipsizePreviousWord.truncatesWord = true;
-
-/***/ },
-/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = TextCanvas;
@@ -519,6 +368,169 @@
 	function getText(element) {
 		return element.attr('text');
 	}
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addWord;
+
+	function addWord(word, textCanvas) {
+		textCanvas.addTextToLine(word);
+	}
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addTruncatedWord;
+
+	var getTruncatedFormsLongestFirst = __webpack_require__(16);
+	var util = __webpack_require__(5);
+
+	function addTruncatedWord(word, textCanvas, boundsTest) {	
+		var wordAddedSuccessfully = false;
+
+		var characters = word.split('');
+		var formsToTryLongestFirst = getTruncatedFormsLongestFirst(characters);
+
+		util.arrayForEach(formsToTryLongestFirst, function(form){
+			if (wordAddedSuccessfully === false) {
+				tryForm(form);
+				wordAddedSuccessfully = boundsTest();
+				undoFormIfUnsuccessful();
+			}
+		});
+
+		return wordAddedSuccessfully;
+
+		function tryForm(form) {
+			textCanvas.addTextToLine(form);
+		}
+
+		function undoFormIfUnsuccessful() {
+			if (wordAddedSuccessfully === false) {
+				textCanvas.restoreLastSavedState();
+			}
+		}
+	}
+
+	addTruncatedWord.truncatesWord = true;
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addSpaceThenWord;
+
+	function addSpaceThenWord(word, textCanvas) {
+		textCanvas.addTextToLine(' ' + word);
+	}
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addBreakThenWord;
+
+	function addBreakThenWord(word, textCanvas) {
+		textCanvas.addLine();
+		textCanvas.addTextToLine(word);
+	}
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = breakWithHyphenOnCurrentLine;
+
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
+
+	function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
+		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
+		return wordAddedSuccessfully;
+
+		function addBreakThenHyphenatedWord(form) {
+			textCanvas.addTextToLine(' ');
+			textCanvas.addTextToLine(form[0]);
+			textCanvas.addTextToLine('-');
+			textCanvas.addLine();
+			textCanvas.addTextToLine(form[1]);
+		}
+	}
+
+	breakWithHyphenOnCurrentLine.truncatesWord = true;
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = breakWithHyphenOnNewLine;
+
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
+
+	function breakWithHyphenOnNewLine(word, textCanvas, boundsTest) {
+		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
+		return wordAddedSuccessfully;
+
+		function addBreakThenHyphenatedWord(form) {
+			textCanvas.addLine();
+			textCanvas.addTextToLine(form[0]);
+			textCanvas.addTextToLine('-');
+			textCanvas.addLine();
+			textCanvas.addTextToLine(form[1]);
+		}
+	}
+
+	breakWithHyphenOnNewLine.truncatesWord = true;
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = addSpaceAndTruncatedWord;
+
+	var addTruncatedWord = __webpack_require__(9);
+
+	function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
+		textCanvas.addTextToLine(' ');
+		textCanvas.saveNewState(); // set baseline as having the space
+		var wordAddedSuccessfully = addTruncatedWord(word, textCanvas, boundsTest);
+		if (wordAddedSuccessfully === false) {
+			// If failed, remove the space
+			textCanvas.dropLastSavedState();
+			textCanvas.restoreLastSavedState();
+		}
+		return wordAddedSuccessfully;
+	}
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = ellipsizePreviousWord;
+
+	var addSpaceAndTruncatedWord = __webpack_require__(14);
+
+	function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
+		var wordAddedSuccessfully;
+		var previousWord = addedWords.pop();
+		
+		if (previousWord === undefined) {
+			wordAddedSuccessfully = false;
+		} else {
+			textCanvas.dropLastSavedState();
+			textCanvas.restoreLastSavedState();
+			wordAddedSuccessfully = addSpaceAndTruncatedWord(previousWord, textCanvas, boundsTest);
+			if (wordAddedSuccessfully === false) {
+				wordAddedSuccessfully = truncatePreviousWordsAndAddEllipsis(word, textCanvas, boundsText, addedWords);
+			}
+		}
+
+		return wordAddedSuccessfully;
+	}
+
+	ellipsizePreviousWord.truncatesWord = true;
 
 /***/ },
 /* 16 */
