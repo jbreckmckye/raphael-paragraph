@@ -14,4 +14,4 @@ module.exports.curry = function curry(fn) {
 	return function() {
 		return fn.apply(this, args.concat(Array.prototype.slice.call(arguments, 0)));
 	};
-}
+};

@@ -1,6 +1,7 @@
 module.exports = fitWordsIntoSpace;
 
 var util = require('./util.js');
+
 // Text addition strategies
 var addWord = require('./textAdditionStrategies/addWord.js');
 var addTruncatedWord = require('./textAdditionStrategies/addTruncatedWord.js');
@@ -34,31 +35,41 @@ function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, bound
 			fallbackWordStrategy = addBreakThenWord;
 		}
 
-		var outOfSpace = tryWordStrategies(wordStrategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas);
+		var strategyUsed = tryWordStrategies(wordStrategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas);
+		var outOfSpace = (strategyUsed.truncatesWord === true);
 		return outOfSpace;
 	}
 }
 
 function tryWordStrategies(strategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas) {
-	var outOfSpace = false;
+	var successfulStrategy = null;
 	var wordAddedSuccessfully = false;
 
-	// Save baseline state
-	undoableTextCanvas.saveNewState();
+	tryEachStrategyUntilOneMakesWordFitSpace();
+	useFallbackIfNoStrategySucceeds();
 
-	util.arrayForEach(strategies, function(strategy){
-		if (wordAddedSuccessfully === false) {			
-			wordAddedSuccessfully = strategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
-			outOfSpace = strategy.truncatesWord === true;
-			testBoundsIfStrategyDoesNotTestItself();
-			undoStrategyIfUnsuccessful();
-		}
-	});
+	return successfulStrategy;
 
-	if (wordAddedSuccessfully === false) {
-		fallbackWordStrategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
-		outOfSpace = true;
+	function tryEachStrategyUntilOneMakesWordFitSpace() {
+		// Save initial state, so we can rollback whenever a strategy fails
+		undoableTextCanvas.saveNewState();
+		// Try each strategy and assign successful strategy once a word fits
+		util.arrayForEach(strategies, function(strategy){
+			if (wordAddedSuccessfully === false) {			
+				wordAddedSuccessfully = strategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
+				testBoundsIfStrategyDoesNotTestItself();
+				setSuccessfulStrategyIfWordFits(strategy);
+				undoStrategyIfUnsuccessful();
+			}
+		});
 	}
+
+	function useFallbackIfNoStrategySucceeds() {
+		if (wordAddedSuccessfully === false) {
+			fallbackWordStrategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
+			successfulStrategy = fallbackWordStrategy;
+		}
+	}	
 
 	function testBoundsIfStrategyDoesNotTestItself() {
 		if (wordAddedSuccessfully === undefined) {
@@ -76,5 +87,9 @@ function tryWordStrategies(strategies, fallbackWordStrategy, word, previouslyAdd
 		undoableTextCanvas.saveNewState();
 	}
 
-	return outOfSpace;
+	function setSuccessfulStrategyIfWordFits(strategy) {
+		if (wordAddedSuccessfully === true) {
+			successfulStrategy = strategy;
+		}		
+	}	
 }
