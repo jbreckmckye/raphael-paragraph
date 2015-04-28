@@ -12,9 +12,10 @@ function paragraph(options) {
 	defaultOptions(options, paper);
 	var words = extractWordsFromText(options.text);
 	var undoableTextCanvas = new UndoableTextCanvas(paper, options.x, options.y, options.lineHeight, options.textStyle);
-	var boundsTest = function() {
-		return lastLineFitsBounds(options.x, options.y, undoableTextCanvas, options.maxWidth, options.maxHeight);
-	};
+	var boundsTest = util.curry(lastLineFitsBounds, options.x, options.y, undoableTextCanvas, options.maxWidth, options.maxHeight);
+	// var boundsTest = function() {
+	// 	return lastLineFitsBounds(options.x, options.y, undoableTextCanvas, options.maxWidth, options.maxHeight);
+	// };
 	fitWordsIntoSpace(words, options.maxWidth, options.maxHeight, undoableTextCanvas, boundsTest);
 	return undoableTextCanvas.getElements();
 }

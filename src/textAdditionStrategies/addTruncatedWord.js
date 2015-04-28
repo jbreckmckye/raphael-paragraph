@@ -29,3 +29,5 @@ function addTruncatedWord(word, textCanvas, boundsTest) {
 		}
 	}
 }
+
+addTruncatedWord.truncatesWord = true;
