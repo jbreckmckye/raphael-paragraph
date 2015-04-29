@@ -5,6 +5,7 @@ var util = require('.././util.js');
 
 function tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, hyphenationFormatter) {
 	var wordAddedSuccessfully = false;
+
 	if (word.length < 2) {
 		wordAddedSuccessfully = false;
 	} else {

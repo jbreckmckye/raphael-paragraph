@@ -22,7 +22,7 @@ function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, bound
 	});
 
 	function addWordUsingStrategies(word, wordIndex, words) {
-		var previouslyAddedWords = words.slice(0, wordIndex);
+		var addedWords = words.slice(0, wordIndex);
 		var wordStrategies = [];
 		var fallbackWordStrategy;
 
@@ -35,13 +35,13 @@ function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, bound
 			fallbackWordStrategy = addBreakThenWord;
 		}
 
-		var strategyUsed = tryWordStrategies(wordStrategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas);
+		var strategyUsed = tryWordStrategies(wordStrategies, fallbackWordStrategy, word, addedWords, boundsTest, undoableTextCanvas);
 		var outOfSpace = (strategyUsed.truncatesWord === true);
 		return outOfSpace;
 	}
 }
 
-function tryWordStrategies(strategies, fallbackWordStrategy, word, previouslyAddedWords, boundsTest, undoableTextCanvas) {
+function tryWordStrategies(strategies, fallbackWordStrategy, word, addedWords, boundsTest, undoableTextCanvas) {
 	var successfulStrategy = null;
 	var wordAddedSuccessfully = false;
 
@@ -56,7 +56,7 @@ function tryWordStrategies(strategies, fallbackWordStrategy, word, previouslyAdd
 		// Try each strategy and assign successful strategy once a word fits
 		util.arrayForEach(strategies, function(strategy){
 			if (wordAddedSuccessfully === false) {			
-				wordAddedSuccessfully = strategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
+				wordAddedSuccessfully = strategy(word, undoableTextCanvas, boundsTest, addedWords);
 				testBoundsIfStrategyDoesNotTestItself();
 				setSuccessfulStrategyIfWordFits(strategy);
 				undoStrategyIfUnsuccessful();
@@ -66,7 +66,7 @@ function tryWordStrategies(strategies, fallbackWordStrategy, word, previouslyAdd
 
 	function useFallbackIfNoStrategySucceeds() {
 		if (wordAddedSuccessfully === false) {
-			fallbackWordStrategy(word, undoableTextCanvas, boundsTest, previouslyAddedWords);
+			fallbackWordStrategy(word, undoableTextCanvas, boundsTest, addedWords);
 			successfulStrategy = fallbackWordStrategy;
 		}
 	}	
