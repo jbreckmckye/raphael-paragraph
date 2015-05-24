@@ -68,7 +68,7 @@
 
 	function paragraph(setOptions) {
 		var paper = this;
-		var config = new ParagraphConfiguration(setOptions);
+		var config = new ParagraphConfiguration(setOptions, paper);
 		var words = extractWordsFromText(config.text);
 		var undoableTextCanvas = new UndoableTextCanvas(paper, config.x, config.y, config.lineHeight, config.textStyle);
 		var boundsTest = util.curry(lastLineFitsBounds, config.x, config.y, undoableTextCanvas, config.maxWidth, config.maxHeight);
@@ -90,15 +90,17 @@
 		'text-anchor' : 'start'
 	};
 
-	function ParagraphConfiguration(options) {
+	function ParagraphConfiguration(options, paper) {
 		this.text = util.defaultUndefined(options.text, 'Hello, world');
-		this.x = util.defaultUndefined(options.x, 0);
-		this.y = util.defaultUndefined(options.y, 0);
-		this.maxWidth = util.defaultUndefined(options.maxWidth, paper.width);
-		this.maxHeight = util.defaultUndefined(options.maxHeight, paper.height);
 		this.textStyle = util.mergeObjectsIntoNew([defaultTextStyle, options.textStyle]);
-		this.lineHeight = util.defaultUndefined(options.lineHeight, options.textStyle['font-size']);
+		this.lineHeight = util.defaultUndefined(options.lineHeight, this.textStyle['font-size']);
+		this.x = util.defaultUndefined(options.x, 0);
+		this.y = util.defaultUndefined(options.y, (this.lineHeight / 2));
+		this.maxWidth = util.defaultUndefined(options.maxWidth, (paper.width - this.x));
+		this.maxHeight = util.defaultUndefined(options.maxHeight, (paper.height - this.y));
+		
 	}
+
 
 /***/ },
 /* 3 */

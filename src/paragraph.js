@@ -10,7 +10,7 @@ var lastLineFitsBounds = require('./lastLineFitsBounds');
 
 function paragraph(setOptions) {
 	var paper = this;
-	var config = new ParagraphConfiguration(setOptions);
+	var config = new ParagraphConfiguration(setOptions, paper);
 	var words = extractWordsFromText(config.text);
 	var undoableTextCanvas = new UndoableTextCanvas(paper, config.x, config.y, config.lineHeight, config.textStyle);
 	var boundsTest = util.curry(lastLineFitsBounds, config.x, config.y, undoableTextCanvas, config.maxWidth, config.maxHeight);

@@ -6,24 +6,113 @@
         <title>Raphael-Paragraph demo</title>
         <script src="raphael-min.js"></script>
         <script src="../dist/raphael-paragraph.js"></script>
+
+        <link rel="stylesheet" href="styles.css">
+
+        <script>
+            // Stop IE8 complaining about HTML5 elements
+            document.createElement('code');
+        </script>
+
+        <script>
+            // Some helper JS for the examples
+
+            function createExample(canvasID, options) {
+                var canvas = document.getElementById(canvasID);
+                var canvasStyles = window.getComputedStyle(canvas);
+                var canvasWidth = canvas.clientWidth - parseFloat(canvasStyles.paddingLeft) - parseFloat(canvasStyles.paddingRight);
+                var canvasHeight = canvas.clientHeight - parseFloat(canvasStyles.paddingTop) - parseFloat(canvasStyles.paddingBottom);
+                var paper = new Raphael(canvas, canvasWidth, canvasHeight);
+                paper.paragraph(options)
+            }
+        </script>
     </head>
     <body>
-        <div id="canvas">
-        	<!-- SVG element will be painted here -->
-        </div>
-        <script>
-        	var paper = new Raphael('canvas', 640 , 960);
-        	var demoText = 'April is the cruellest month, breeding lilacs out of the dead land, mixing memory with desire, stirring dull roots with spring rain. Supercalifragilisticexpialodocious. 1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17';
-        	para = paper.paragraph({
-                x : 100,
-                y : 100,
-                maxWidth: 200,
-                maxHeight: 45,
-                lineHeight: 16,
-                text : demoText,
-                textStyle : {'font-size': 16}
-            });
 
-        </script>
+        <h1 class="examples-heading-main">Raphael-paragraph</h1>
+
+        <div class="examples-subheading">
+            <h2 class="examples-subheading-canvas">Examples</h2>
+            <h2 class="examples-subheading-code">Code</h2>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="simpleMultiline" style="width: 300px; height: 100px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text"});
+            </code>
+            <script>
+                var paper = createExample('simpleMultiline', {
+                    text : "This is some simple, multi-line wrapped text. You don't need to add manual line breaks - it just works automatically."
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="maximumHeight" style="width: 300px; height: 60px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text"});
+            </code>
+            <script>
+                var paper = createExample('maximumHeight', {
+                    text : "As well as performing horizontal wrapping, raphael-paragraph will perform vertical truncation, with ellipses. How does that look? Let's find out by adding lots and lots and lots and lots and lots and lots of words"
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="maximumHeightSet" style="width: 300px; height: 80px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text", maxHeight: 50});
+            </code>
+            <script>
+                var paper = createExample('maximumHeightSet', {
+                    text : "You may override the vertical height, if you like. You can set an arbitrary value or pass a value of 'Infinity'. Here, I'm setting the max-height quite low, so you can see the text being truncated well before the bottom of the canvas itself",
+                    maxHeight : 50
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="lineHeight" style="width: 300px; height: 100px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text", lineHeight: 20});
+            </code>
+            <script>
+                var paper = createExample('lineHeight', {
+                    text : "raphael-paragraph gives you control over the vertical spacing of text lines, so you can control the density of your text, just like the line-height property in CSS",
+                    lineHeight: 20
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="betterStyles" style="width: 300px; height: 100px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text", textStyle:<br/>
+                &emsp;{'font-style': 'italic', 'fill': '#004d90'}<br/>
+                });
+            </code>
+            <script>
+                var paper = createExample('betterStyles', {
+                    text : "You can also pass an object of SVG attributes to use as text styles. These will be applied to all text elements.",
+                    lineHeight: 21,
+                    textStyle : {'font-style' : 'italic', 'font-size' : 16, 'fill' : '#004d90'}
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="longWords" style="width: 180px; height: 100px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text"});
+            </code>
+            <script>
+                var paper = createExample('longWords', {
+                    text : "But what if you have a narrow container, and a long word? It'll be hyphenated. Let's try... supercalifragilisticexpialodocious"
+                });
+            </script>
+        </div>
+
     </body>
 </html>

@@ -1,0 +1,53 @@
+* {
+    padding: 0;
+    margin: 0;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+body {
+    width : 800px;
+    margin: 32px auto;
+}
+
+.examples-heading-main {
+    font-size: 32px;
+    text-align: center;
+}
+
+.examples-subheading {
+    overflow: hidden;
+    margin-top: 16px;
+    margin-bottom: 32px;
+}
+
+.examples-subheading-canvas {
+    font-size: 24px;
+    float: left;
+}
+
+.examples-subheading-code {
+    font-size: 24px;
+    float: right;
+}
+
+.example {
+    overflow: hidden;
+}
+
+.example + .example {
+    margin-top: 64px;
+}
+
+.example-canvas {
+    float: left;                
+    border: 1px dashed #ddd;
+    padding: 4px;
+}
+
+.example-code {
+    float: right;
+    width: 400px;
+    border: 1px solid #ccc;
+    padding: 4px;
+    background: #eee;
+}
