@@ -414,7 +414,7 @@
 
 	module.exports = addTruncatedWord;
 
-	var getTruncatedFormsLongestFirst = __webpack_require__(17);
+	var getTruncatedFormsLongestFirst = __webpack_require__(18);
 	var util = __webpack_require__(6);
 
 	function addTruncatedWord(word, textCanvas, boundsTest) {	
@@ -473,7 +473,7 @@
 
 	module.exports = breakWithHyphenOnCurrentLine;
 
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(18);
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
 
 	function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
 		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
@@ -496,7 +496,7 @@
 
 	module.exports = breakWithHyphenOnNewLine;
 
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(18);
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
 
 	function breakWithHyphenOnNewLine(word, textCanvas, boundsTest) {
 		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
@@ -578,38 +578,6 @@
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = getTruncatedFormsLongestFirst;
-
-	var util = __webpack_require__(6);
-
-	function getTruncatedFormsLongestFirst(characters) {
-		var forms = [];
-		createLeftToRightSubstrings(characters, forms);
-		addEllipsesToForms(forms);
-		forms.reverse();
-		return forms;
-	}
-
-	function createLeftToRightSubstrings(characters, forms) {
-		util.arrayForEach(characters, function(character, index) {
-			var form = '';
-			for (var i = 0; i <= index; i++) {
-				form = form + characters[i];
-			}
-			forms.push(form);
-		});
-	}
-
-	function addEllipsesToForms(forms) {
-		util.arrayForEach(forms, function(form, index, forms){
-			forms[index] = form + '...';
-		});
-	}
-
-/***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
 	module.exports = tryHyphenatedFormsUsingFormatter;
 
 	var getBrokenForms = __webpack_require__(19);
@@ -638,6 +606,38 @@
 				textCanvas.restoreLastSavedState();
 			}
 		}
+	}
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = getTruncatedFormsLongestFirst;
+
+	var util = __webpack_require__(6);
+
+	function getTruncatedFormsLongestFirst(characters) {
+		var forms = [];
+		createLeftToRightSubstrings(characters, forms);
+		addEllipsesToForms(forms);
+		forms.reverse();
+		return forms;
+	}
+
+	function createLeftToRightSubstrings(characters, forms) {
+		util.arrayForEach(characters, function(character, index) {
+			var form = '';
+			for (var i = 0; i <= index; i++) {
+				form = form + characters[i];
+			}
+			forms.push(form);
+		});
+	}
+
+	function addEllipsesToForms(forms) {
+		util.arrayForEach(forms, function(form, index, forms){
+			forms[index] = form + '...';
+		});
 	}
 
 /***/ },
