@@ -1,6 +1,8 @@
 // Karma configuration
 // Generated on Thu Mar 26 2015 22:02:04 GMT+0000 (GMT Standard Time)
 
+var RewirePlugin = require("rewire-webpack");
+
 module.exports = function(config) {
   config.set({
 
@@ -30,6 +32,12 @@ module.exports = function(config) {
     preprocessors: {
         'test/*Spec.js' : ['webpack'],
         'test/*/*Spec.js' : ['webpack']
+    },
+
+    webpack: {
+        plugins: [
+            new RewirePlugin()
+        ]
     },
 
 
