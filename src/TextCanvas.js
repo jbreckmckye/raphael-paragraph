@@ -29,13 +29,8 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		});
 	};
 
-	this.getLastLineEnd = function getLastLineEnd() {
-		var lastLineIndex = lines.length - 1;
-		var boundingBox = lines[lastLineIndex].getBBox();
-		return {
-			x : boundingBox.x2,
-			y : boundingBox.y2
-		};
+	this.getBBox = function getBBox() {
+		return lines.getBBox();
 	};
 
 	this.getState = function getLineTexts() {

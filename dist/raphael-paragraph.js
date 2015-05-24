@@ -64,14 +64,14 @@
 	var UndoableTextCanvas = __webpack_require__(4);
 	var fitWordsIntoSpace = __webpack_require__(5);
 	var util = __webpack_require__(6);
-	var lastLineFitsBounds = __webpack_require__(7);
+	var linesFitBounds = __webpack_require__(7);
 
 	function paragraph(setOptions) {
 		var paper = this;
 		var config = new ParagraphConfiguration(setOptions, paper);
 		var words = extractWordsFromText(config.text);
 		var undoableTextCanvas = new UndoableTextCanvas(paper, config.x, config.y, config.lineHeight, config.textStyle);
-		var boundsTest = util.curry(lastLineFitsBounds, config.x, config.y, undoableTextCanvas, config.maxWidth, config.maxHeight);
+		var boundsTest = util.curry(linesFitBounds, config.x, config.y, undoableTextCanvas, config.maxWidth, config.maxHeight);
 		fitWordsIntoSpace(words, config.maxWidth, config.maxHeight, undoableTextCanvas, boundsTest);
 		return undoableTextCanvas.getElements();
 	}
@@ -123,7 +123,7 @@
 
 	module.exports = UndoableTextCanvas;
 
-	var TextCanvas = __webpack_require__(8);
+	var TextCanvas = __webpack_require__(16);
 
 	function UndoableTextCanvas(paper, x, y, lineHeight, styles) {
 		var states = [];
@@ -165,14 +165,14 @@
 	var util = __webpack_require__(6);
 
 	// Text addition strategies
-	var addWord = __webpack_require__(9);
-	var addTruncatedWord = __webpack_require__(10);
-	var addSpaceThenWord = __webpack_require__(11);
-	var addBreakThenWord = __webpack_require__(12);
-	var breakWithHyphenOnCurrentLine = __webpack_require__(13);
-	var breakWithHyphenOnNewLine = __webpack_require__(14);
-	var addSpaceAndTruncatedWord = __webpack_require__(15);
-	var ellipsizePreviousWord = __webpack_require__(16);
+	var addWord = __webpack_require__(8);
+	var addTruncatedWord = __webpack_require__(9);
+	var addSpaceThenWord = __webpack_require__(10);
+	var addBreakThenWord = __webpack_require__(11);
+	var breakWithHyphenOnCurrentLine = __webpack_require__(12);
+	var breakWithHyphenOnNewLine = __webpack_require__(13);
+	var addSpaceAndTruncatedWord = __webpack_require__(14);
+	var ellipsizePreviousWord = __webpack_require__(15);
 
 	function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
 		var outOfSpace = false;
@@ -310,12 +310,12 @@
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = lastLineFitsBounds;
+	module.exports = linesFitBounds;
 
-	function lastLineFitsBounds(startX, startY, textCanvas, maxWidth, maxHeight) {
-		var lineEnd = textCanvas.getLastLineEnd();
-		var width = lineEnd.x - startX;
-		var height = lineEnd.y - startY;
+	function linesFitBounds(startX, startY, textCanvas, maxWidth, maxHeight) {
+		var lineBox = textCanvas.getBBox();
+		var width = lineBox.x2 - lineBox.x;
+		var height = lineBox.y2 - lineBox.y;
 		if (width <= maxWidth && height <= maxHeight) {
 			return true;
 		} else {
@@ -327,81 +327,6 @@
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = TextCanvas;
-
-	var util = __webpack_require__(6);
-
-	function TextCanvas(paper, x, y, lineHeight, styles) {
-		var that = this;
-		var lines = paper.set();
-		var nextLineY = y;
-
-		this.addLine = function addLine() {
-			var newLine = paper.text(x, nextLineY, '');
-			newLine.attr(styles);
-			lines.push(newLine);
-			nextLineY += lineHeight;
-		};
-
-		this.addTextToLine = function addTextToLine(text) {
-			var currentLine = util.arrayLast(lines);
-			var currentText = getText(currentLine);
-			var newText = currentText + text;
-			setText(currentLine, newText);
-		};
-
-		this.restoreState = function createLines(lineTexts) {
-			removeAllLines();
-			util.arrayForEach(lineTexts, function(lineText){
-				that.addLine();
-				that.addTextToLine(lineText);
-			});
-		};
-
-		this.getLastLineEnd = function getLastLineEnd() {
-			var lastLineIndex = lines.length - 1;
-			var boundingBox = lines[lastLineIndex].getBBox();
-			return {
-				x : boundingBox.x2,
-				y : boundingBox.y2
-			};
-		};
-
-		this.getState = function getLineTexts() {
-			var texts = [];
-			lines.forEach(function(line){
-				var lineText = getText(line);
-				texts.push(lineText);
-			});
-			return texts;
-		};
-
-		this.getElements = function getElements() {
-			return lines;
-		};
-
-		function removeAllLines() {
-			lines.remove();
-			// .remove() leaves handles to the elements within the set, so we reinitialize it
-			lines = paper.set(); 
-			nextLineY = y;
-		};
-
-		this.addLine(); // initialize with a first line available
-	}
-
-	function setText(element, newText) {
-		element.attr('text', newText);
-	}
-
-	function getText(element) {
-		return element.attr('text');
-	}
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
 	module.exports = addWord;
 
 	function addWord(word, textCanvas) {
@@ -409,7 +334,7 @@
 	}
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addTruncatedWord;
@@ -447,7 +372,7 @@
 	addTruncatedWord.truncatesWord = true;
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addSpaceThenWord;
@@ -457,7 +382,7 @@
 	}
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addBreakThenWord;
@@ -468,7 +393,7 @@
 	}
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = breakWithHyphenOnCurrentLine;
@@ -491,7 +416,7 @@
 	breakWithHyphenOnCurrentLine.truncatesWord = true;
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = breakWithHyphenOnNewLine;
@@ -514,12 +439,12 @@
 	breakWithHyphenOnNewLine.truncatesWord = true;
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addSpaceAndTruncatedWord;
 
-	var addTruncatedWord = __webpack_require__(10);
+	var addTruncatedWord = __webpack_require__(9);
 
 	function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
 		textCanvas.addTextToLine(' ');
@@ -534,13 +459,13 @@
 	}
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = ellipsizePreviousWord;
 
-	var addSpaceAndTruncatedWord = __webpack_require__(15);
-	var addTruncatedWord = __webpack_require__(10);
+	var addSpaceAndTruncatedWord = __webpack_require__(14);
+	var addTruncatedWord = __webpack_require__(9);
 
 	function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
 		var previousWords = addedWords.slice(0); // clone
@@ -572,6 +497,76 @@
 		}
 
 		return wordAddedSuccessfully;
+	}
+
+/***/ },
+/* 16 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = TextCanvas;
+
+	var util = __webpack_require__(6);
+
+	function TextCanvas(paper, x, y, lineHeight, styles) {
+		var that = this;
+		var lines = paper.set();
+		var nextLineY = y;
+
+		this.addLine = function addLine() {
+			var newLine = paper.text(x, nextLineY, '');
+			newLine.attr(styles);
+			lines.push(newLine);
+			nextLineY += lineHeight;
+		};
+
+		this.addTextToLine = function addTextToLine(text) {
+			var currentLine = util.arrayLast(lines);
+			var currentText = getText(currentLine);
+			var newText = currentText + text;
+			setText(currentLine, newText);
+		};
+
+		this.restoreState = function createLines(lineTexts) {
+			removeAllLines();
+			util.arrayForEach(lineTexts, function(lineText){
+				that.addLine();
+				that.addTextToLine(lineText);
+			});
+		};
+
+		this.getBBox = function getBBox() {
+			return lines.getBBox();
+		};
+
+		this.getState = function getLineTexts() {
+			var texts = [];
+			lines.forEach(function(line){
+				var lineText = getText(line);
+				texts.push(lineText);
+			});
+			return texts;
+		};
+
+		this.getElements = function getElements() {
+			return lines;
+		};
+
+		function removeAllLines() {
+			lines.remove();
+			// .remove() leaves handles to the elements within the set, so we reinitialize it
+			lines = paper.set(); 
+			nextLineY = y;
+		};
+
+		this.addLine(); // initialize with a first line available
+	}
+
+	function setText(element, newText) {
+		element.attr('text', newText);
+	}
+
+	function getText(element) {
+		return element.attr('text');
 	}
 
 /***/ },
