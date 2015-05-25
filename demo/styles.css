@@ -50,4 +50,11 @@ body {
     border: 1px solid #ccc;
     padding: 4px;
     background: #eee;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.example-code-inactive {
+    background: transparent;
+    opacity: 0.6;
 }

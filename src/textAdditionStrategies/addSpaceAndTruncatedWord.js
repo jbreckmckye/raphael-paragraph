@@ -13,3 +13,5 @@ function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
 	}
 	return wordAddedSuccessfully;
 }
+
+addSpaceAndTruncatedWord.truncatesWord = true;

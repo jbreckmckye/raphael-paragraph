@@ -458,6 +458,8 @@
 		return wordAddedSuccessfully;
 	}
 
+	addSpaceAndTruncatedWord.truncatesWord = true;
+
 /***/ },
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {

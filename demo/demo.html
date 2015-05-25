@@ -23,7 +23,7 @@
                 var canvasWidth = canvas.clientWidth - parseFloat(canvasStyles.paddingLeft) - parseFloat(canvasStyles.paddingRight);
                 var canvasHeight = canvas.clientHeight - parseFloat(canvasStyles.paddingTop) - parseFloat(canvasStyles.paddingBottom);
                 var paper = new Raphael(canvas, canvasWidth, canvasHeight);
-                paper.paragraph(options)
+                return paper.paragraph(options)
             }
         </script>
     </head>
@@ -42,7 +42,7 @@
                 paper.paragraph({text: "my text"});
             </code>
             <script>
-                var paper = createExample('simpleMultiline', {
+                var paragraph = createExample('simpleMultiline', {
                     text : "This is some simple, multi-line wrapped text. You don't need to add manual line breaks - it just works automatically."
                 });
             </script>
@@ -50,11 +50,11 @@
 
         <div class="example">
             <div class="example-canvas" id="maximumHeight" style="width: 300px; height: 60px"></div>
-            <code class="example-code">
+            <code class="example-code example-code-inactive">
                 paper.paragraph({text: "my text"});
             </code>
             <script>
-                var paper = createExample('maximumHeight', {
+                var paragraph = createExample('maximumHeight', {
                     text : "As well as performing horizontal wrapping, raphael-paragraph will perform vertical truncation, with ellipses. How does that look? Let's find out by adding lots and lots and lots and lots and lots and lots of words"
                 });
             </script>
@@ -66,7 +66,7 @@
                 paper.paragraph({text: "my text", maxHeight: 50});
             </code>
             <script>
-                var paper = createExample('maximumHeightSet', {
+                var paragraph = createExample('maximumHeightSet', {
                     text : "You may override the vertical height, if you like. You can set an arbitrary value or pass a value of 'Infinity'. Here, I'm setting the max-height quite low, so you can see the text being truncated well before the bottom of the canvas itself",
                     maxHeight : 50
                 });
@@ -79,7 +79,7 @@
                 paper.paragraph({text: "my text", lineHeight: 20});
             </code>
             <script>
-                var paper = createExample('lineHeight', {
+                var paragraph = createExample('lineHeight', {
                     text : "raphael-paragraph gives you control over the vertical spacing of text lines, so you can control the density of your text, just like the line-height property in CSS",
                     lineHeight: 20
                 });
@@ -94,8 +94,8 @@
                 });
             </code>
             <script>
-                var paper = createExample('betterStyles', {
-                    text : "You can also pass an object of SVG attributes to use as text styles. These will be applied to all text elements.",
+                var paragraph = createExample('betterStyles', {
+                    text : "You can also pass an object of SVG attributes to use as text styles. These will be applied to all text elements in the paragraph.",
                     lineHeight: 21,
                     textStyle : {'font-style' : 'italic', 'font-size' : 16, 'fill' : '#004d90'}
                 });
@@ -103,13 +103,58 @@
         </div>
 
         <div class="example">
-            <div class="example-canvas" id="longWords" style="width: 180px; height: 100px"></div>
+            <div class="example-canvas" id="transformation" style="width: 300px; height: 180px"></div>
             <code class="example-code">
+                var paragraph = paper.paragraph({text: "my text"});<br/>
+                var paragraphBBox = paragraph.getBBox();<br/>
+                var rotationCenterX = (paragraphBBox.x + paragraphBBox.x2) / 2;<br/>
+                var rotationCenterY = (paragraphBBox.y + paragraphBBox.y2) / 2;<br/>
+                paragraph.transform('r-30,' + rotationCenterX + ',' + rotationCenterY);<br/>
+            </code>
+            <script>
+                var paragraph = createExample('transformation', {
+                    text : "Raphael-paragraph returns real Raphael element sets. You can rotate, scale and add shadows to the paragraphs you create.",
+                    y : 70
+                });
+                var paragraphBBox = paragraph.getBBox();
+                var rotationCenterX = (paragraphBBox.x + paragraphBBox.x2) / 2;
+                var rotationCenterY = (paragraphBBox.y + paragraphBBox.y2) / 2;
+                paragraph.transform('r-30,' + rotationCenterX + ',' + rotationCenterY);
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="longWords" style="width: 180px; height: 100px"></div>
+            <code class="example-code example-code-inactive">
                 paper.paragraph({text: "my text"});
             </code>
             <script>
-                var paper = createExample('longWords', {
-                    text : "But what if you have a narrow container, and a long word? It'll be hyphenated. Let's try... supercalifragilisticexpialodocious"
+                var paragraph = createExample('longWords', {
+                    text : "But what if you have a narrow container, and a long word? It'll be hyphenated. Let's try: supercalifragilisticexpialodocious"
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="longWordsNewLine" style="width: 160px; height: 100px"></div>
+            <code class="example-code example-code-inactive">
+                paper.paragraph({text: "my text"});
+            </code>
+            <script>
+                var paragraph = createExample('longWordsNewLine', {
+                    text : "If the hyphenated form doesn't fit, raphael-paragraph tries using the hypenated form on a new line. For example: supercalifragilisticexpialodocious"
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="narrowBoxes" style="width: 90px; height: 240px"></div>
+            <code class="example-code example-code-inactive">
+                paper.paragraph({text: "my text"});
+            </code>
+            <script>
+                var paragraph = createExample('narrowBoxes', {
+                    text : "If the paragraph is particularly narrow and the word just cannot possibly fit, even with a hyphen break, then it is truncated and we stop displaying any more words. Like so: supercalifragilisticexpialodocious. [These words end up hidden]"
                 });
             </script>
         </div>
