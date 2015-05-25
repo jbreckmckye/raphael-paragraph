@@ -508,6 +508,8 @@
 	module.exports = TextCanvas;
 
 	var util = __webpack_require__(6);
+	var getText = __webpack_require__(19);
+	var TextCanvasState = __webpack_require__(20);
 
 	function TextCanvas(paper, x, y, lineHeight, styles) {
 		var that = this;
@@ -528,7 +530,8 @@
 			setText(currentLine, newText);
 		};
 
-		this.restoreState = function createLines(lineTexts) {
+		this.restoreState = function restoreState(state) {
+			var lineTexts = state.getLineTexts();
 			removeAllLines();
 			util.arrayForEach(lineTexts, function(lineText){
 				that.addLine();
@@ -540,13 +543,8 @@
 			return lines.getBBox();
 		};
 
-		this.getState = function getLineTexts() {
-			var texts = [];
-			lines.forEach(function(line){
-				var lineText = getText(line);
-				texts.push(lineText);
-			});
-			return texts;
+		this.getState = function getState() {
+			return new TextCanvasState(lines);
 		};
 
 		this.getElements = function getElements() {
@@ -565,10 +563,6 @@
 
 	function setText(element, newText) {
 		element.attr('text', newText);
-	}
-
-	function getText(element) {
-		return element.attr('text');
 	}
 
 /***/ },
@@ -609,7 +603,7 @@
 
 	module.exports = tryHyphenatedFormsUsingFormatter;
 
-	var getBrokenForms = __webpack_require__(19);
+	var getBrokenForms = __webpack_require__(21);
 	var util = __webpack_require__(6);
 
 	function tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, hyphenationFormatter) {
@@ -639,6 +633,37 @@
 
 /***/ },
 /* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = getText;
+
+	function getText(element) {
+		return element.attr('text');
+	}
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = TextCanvasState;
+
+	var util = __webpack_require__(6);
+	var getText = __webpack_require__(19);
+
+	function TextCanvasState(lines) {
+		var lineTexts = [];
+		util.arrayForEach(lines, function(line){
+			var lineText = getText(line);
+			lineTexts.push(lineText);
+		});
+
+		this.getLineTexts = function getLineTexts() {
+			return lineTexts.slice();
+		};
+	}
+
+/***/ },
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = getBrokenForms;

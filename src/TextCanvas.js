@@ -1,6 +1,8 @@
 module.exports = TextCanvas;
 
 var util = require('./util.js');
+var getText = require('./getText');
+var TextCanvasState = require('./TextCanvasState');
 
 function TextCanvas(paper, x, y, lineHeight, styles) {
 	var that = this;
@@ -21,7 +23,8 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		setText(currentLine, newText);
 	};
 
-	this.restoreState = function createLines(lineTexts) {
+	this.restoreState = function restoreState(state) {
+		var lineTexts = state.getLineTexts();
 		removeAllLines();
 		util.arrayForEach(lineTexts, function(lineText){
 			that.addLine();
@@ -33,13 +36,8 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		return lines.getBBox();
 	};
 
-	this.getState = function getLineTexts() {
-		var texts = [];
-		lines.forEach(function(line){
-			var lineText = getText(line);
-			texts.push(lineText);
-		});
-		return texts;
+	this.getState = function getState() {
+		return new TextCanvasState(lines);
 	};
 
 	this.getElements = function getElements() {
@@ -58,8 +56,4 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 
 function setText(element, newText) {
 	element.attr('text', newText);
-}
-
-function getText(element) {
-	return element.attr('text');
 }
