@@ -16,5 +16,5 @@ function ParagraphConfiguration(options, paper) {
 	this.y = util.defaultUndefined(options.y, (this.lineHeight / 2));
 	this.maxWidth = util.defaultUndefined(options.maxWidth, (paper.width - this.x));
 	this.maxHeight = util.defaultUndefined(options.maxHeight, (paper.height - this.y));
-	
+	this.hyphenationEnabled - util.defaultUndefined(options.hyphenationEnabled, true);
 }

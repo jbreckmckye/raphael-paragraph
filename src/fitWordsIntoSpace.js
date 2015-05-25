@@ -12,7 +12,7 @@ var breakWithHyphenOnNewLine = require('./textAdditionStrategies/breakWithHyphen
 var addSpaceAndTruncatedWord = require('./textAdditionStrategies/addSpaceAndTruncatedWord.js');
 var ellipsizePreviousWord = require('./textAdditionStrategies/ellipsizePreviousWord.js');
 
-function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
+function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest, hyphenationEnabled) {
 	var outOfSpace = false;
 
 	util.arrayForEach(words, function addWordsUntilOutOfSpace(word, wordIndex, words){
@@ -31,7 +31,9 @@ function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, bound
 			wordStrategies = [addWord, addTruncatedWord];
 			fallbackWordStrategy = addWord;
 		} else {
-			wordStrategies = [addSpaceThenWord, addBreakThenWord, breakWithHyphenOnCurrentLine, breakWithHyphenOnNewLine, addSpaceAndTruncatedWord, ellipsizePreviousWord];
+			var strategiesWithHyphenation = [addSpaceThenWord, addBreakThenWord, breakWithHyphenOnCurrentLine, breakWithHyphenOnNewLine, addSpaceAndTruncatedWord, ellipsizePreviousWord];
+			var strategiesWithoutHyphenation = [addSpaceThenWord, addBreakThenWord, addSpaceAndTruncatedWord, ellipsizePreviousWord];
+			wordStrategies = hyphenationEnabled ? strategiesWithHyphenation : strategiesWithoutHyphenation;
 			fallbackWordStrategy = addBreakThenWord;
 		}
 

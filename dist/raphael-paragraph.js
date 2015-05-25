@@ -72,7 +72,7 @@
 		var words = extractWordsFromText(config.text);
 		var undoableTextCanvas = new UndoableTextCanvas(paper, config.x, config.y, config.lineHeight, config.textStyle);
 		var boundsTest = util.curry(linesFitBounds, config.x, config.y, undoableTextCanvas, config.maxWidth, config.maxHeight);
-		fitWordsIntoSpace(words, config.maxWidth, config.maxHeight, undoableTextCanvas, boundsTest);
+		fitWordsIntoSpace(words, config.maxWidth, config.maxHeight, undoableTextCanvas, boundsTest, config.hyphenationEnabled);
 		return undoableTextCanvas.getElements();
 	}
 
@@ -98,7 +98,7 @@
 		this.y = util.defaultUndefined(options.y, (this.lineHeight / 2));
 		this.maxWidth = util.defaultUndefined(options.maxWidth, (paper.width - this.x));
 		this.maxHeight = util.defaultUndefined(options.maxHeight, (paper.height - this.y));
-		
+		this.hyphenationEnabled - util.defaultUndefined(options.hyphenationEnabled, true);
 	}
 
 
@@ -174,7 +174,7 @@
 	var addSpaceAndTruncatedWord = __webpack_require__(15);
 	var ellipsizePreviousWord = __webpack_require__(16);
 
-	function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
+	function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest, hyphenationEnabled) {
 		var outOfSpace = false;
 
 		util.arrayForEach(words, function addWordsUntilOutOfSpace(word, wordIndex, words){
@@ -193,7 +193,9 @@
 				wordStrategies = [addWord, addTruncatedWord];
 				fallbackWordStrategy = addWord;
 			} else {
-				wordStrategies = [addSpaceThenWord, addBreakThenWord, breakWithHyphenOnCurrentLine, breakWithHyphenOnNewLine, addSpaceAndTruncatedWord, ellipsizePreviousWord];
+				var strategiesWithHyphenation = [addSpaceThenWord, addBreakThenWord, breakWithHyphenOnCurrentLine, breakWithHyphenOnNewLine, addSpaceAndTruncatedWord, ellipsizePreviousWord];
+				var strategiesWithoutHyphenation = [addSpaceThenWord, addBreakThenWord, addSpaceAndTruncatedWord, ellipsizePreviousWord];
+				wordStrategies = hyphenationEnabled ? strategiesWithHyphenation : strategiesWithoutHyphenation;
 				fallbackWordStrategy = addBreakThenWord;
 			}
 

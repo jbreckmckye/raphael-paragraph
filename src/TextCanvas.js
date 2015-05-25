@@ -74,19 +74,8 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 			nextLineY -= lineHeight;			
 		};
 
-		// var lineTexts = state.getLineTexts();
-		// removeAllLines();
-		// util.arrayForEach(lineTexts, function(lineText){
-		// 	that.addLine();
-		// 	that.addTextToLine(lineText);
-		// });
-		// var newLineCount = state.getLineCount();
-		// textAdditionTracker = new TextAdditionTracker(newLineCount);
 	};
 
-	// this.getBBox = function getBBox() {
-	// 	return lines.getBBox();
-	// };
 
 	this.getChangedLinesBBox = function getChangedLinesBBox() {
 		var changedLines = paper.set();

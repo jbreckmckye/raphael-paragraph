@@ -124,13 +124,13 @@
         </div>
 
         <div class="example">
-            <div class="example-canvas" id="longWords" style="width: 180px; height: 100px"></div>
+            <div class="example-canvas" id="longWords" style="width: 120px; height: 100px"></div>
             <code class="example-code example-code-inactive">
                 paper.paragraph({text: "my text"});
             </code>
             <script>
                 var paragraph = createExample('longWords', {
-                    text : "But what if you have a narrow container, and a long word? It'll be hyphenated. Let's try: supercalifragilisticexpialodocious"
+                    text : "But what if you have a narrow container, and a long word? It'll be hyphenated. Let's try: antidisestablishamentarianism"
                 });
             </script>
         </div>
@@ -142,7 +142,7 @@
             </code>
             <script>
                 var paragraph = createExample('longWordsNewLine', {
-                    text : "If the hyphenated form doesn't fit, raphael-paragraph tries using the hypenated form on a new line. For example: supercalifragilisticexpialodocious"
+                    text : "If the hyphenated form doesn't fit, raphael-paragraph tries using the hypenated form on a new line. For example: antidisestablishamentarianism"
                 });
             </script>
         </div>
@@ -154,7 +154,23 @@
             </code>
             <script>
                 var paragraph = createExample('narrowBoxes', {
-                    text : "If the paragraph is particularly narrow and the word just cannot possibly fit, even with a hyphen break, then it is truncated and we stop displaying any more words. Like so: supercalifragilisticexpialodocious. [These words end up hidden]"
+                    text : "If the paragraph is particularly narrow and the word just cannot possibly fit, even with a hyphen break, then it is truncated and we stop displaying any more words. Like so: antidisestablishamentarianism. [These words end up hidden]"
+                });
+            </script>
+        </div>
+
+        <div class="example">
+            <div class="example-canvas" id="noHyphens" style="width: 120px; height: 240px"></div>
+            <code class="example-code">
+                paper.paragraph({<br/>
+                &emsp;text: "my text",<br/>
+                &emsp;hyphenationEnabled: false<br/>
+                });
+            </code>
+            <script>
+                var paragraph = createExample('noHyphens', {
+                    text : "Hyphenation can be disabled for performance gains on large bodies of text. In that case, long words are just truncated: antidisestablishamentarianism",
+                    hyphenationEnabled : false
                 });
             </script>
         </div>

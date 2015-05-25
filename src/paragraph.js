@@ -14,6 +14,6 @@ function paragraph(setOptions) {
 	var words = extractWordsFromText(config.text);
 	var undoableTextCanvas = new UndoableTextCanvas(paper, config.x, config.y, config.lineHeight, config.textStyle);
 	var boundsTest = util.curry(linesFitBounds, config.x, config.y, undoableTextCanvas, config.maxWidth, config.maxHeight);
-	fitWordsIntoSpace(words, config.maxWidth, config.maxHeight, undoableTextCanvas, boundsTest);
+	fitWordsIntoSpace(words, config.maxWidth, config.maxHeight, undoableTextCanvas, boundsTest, config.hyphenationEnabled);
 	return undoableTextCanvas.getElements();
 }

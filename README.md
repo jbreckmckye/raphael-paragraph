@@ -2,8 +2,6 @@
 
 A plugin for Raphael.js that allows you to create paragraphs of multiline text with automatic word wrapping and vertical line spacing. The paragraphs are "real" Raphael element sets, and can be animated, stacked and evented like any others. Lengthy words are hyphenated and impossible-to-fit words are truncated with ellipses.
 
-The code is in a workable state, but I'm still doing some refactoring and a lot of optimization. I've also yet to write any real tests for it, so be careful with it. It's very much still in 'beta'.
-
 
 ## Why would I need this?
 
@@ -115,6 +113,15 @@ Fields include _font_, _font-family_, _font-weight_, _opacity_, _stroke_, _strok
 **Type:** Object of Raphael element attribute values
 
 **Default value:** {'font-size' : 13, 'text-anchor' : 'start'}
+
+
+#### options.hyphenationEnabled
+
+Turns text hyphenation on or off. You might want to disable this if you're rendering a lot of text, as hyphenation can be a performance killer.
+
+**Type:** Boolean
+
+**Default value:** True
 
 
 ### Return value
