@@ -159,5 +159,17 @@
             </script>
         </div>
 
+        <div class="example">
+            <div class="example-canvas" id="truncatePrevious" style="width: 250px; height: 90px"></div>
+            <code class="example-code">
+                paper.paragraph({text: "my text"});
+            </code>
+            <script>
+                var paragraph = createExample('truncatePrevious', {
+                    text : "Truncation is smart - it takes into account that ellipses have a nonzero size. So when truncating, the library rolls words backwards one at a time until the ellipsis fits. You should be able to observe this with the example string 'i ii iiiii ii i' - i ii iiiii ii i"
+                });
+            </script>
+        </div>
+
     </body>
 </html>

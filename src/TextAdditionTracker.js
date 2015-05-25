@@ -1,8 +1,8 @@
-module.exports = LineChangeTracker;
+module.exports = TextAdditionTracker;
 
 var util = require('./util.js');
 
-function LineChangeTracker(initialLineCount) {
+function TextAdditionTracker(initialLineCount) {
 	initialLineCount = initialLineCount || 0;
 	var lineChangedFlags = [];
 

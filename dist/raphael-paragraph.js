@@ -123,7 +123,7 @@
 
 	module.exports = UndoableTextCanvas;
 
-	var TextCanvas = __webpack_require__(16);
+	var TextCanvas = __webpack_require__(8);
 
 	function UndoableTextCanvas(paper, x, y, lineHeight, styles) {
 		var states = [];
@@ -165,14 +165,14 @@
 	var util = __webpack_require__(6);
 
 	// Text addition strategies
-	var addWord = __webpack_require__(8);
-	var addTruncatedWord = __webpack_require__(9);
-	var addSpaceThenWord = __webpack_require__(10);
-	var addBreakThenWord = __webpack_require__(11);
-	var breakWithHyphenOnCurrentLine = __webpack_require__(12);
-	var breakWithHyphenOnNewLine = __webpack_require__(13);
-	var addSpaceAndTruncatedWord = __webpack_require__(14);
-	var ellipsizePreviousWord = __webpack_require__(15);
+	var addWord = __webpack_require__(9);
+	var addTruncatedWord = __webpack_require__(10);
+	var addSpaceThenWord = __webpack_require__(11);
+	var addBreakThenWord = __webpack_require__(12);
+	var breakWithHyphenOnCurrentLine = __webpack_require__(13);
+	var breakWithHyphenOnNewLine = __webpack_require__(14);
+	var addSpaceAndTruncatedWord = __webpack_require__(15);
+	var ellipsizePreviousWord = __webpack_require__(16);
 
 	function fitWordsIntoSpace(words, maxWidth, maxHeight, undoableTextCanvas, boundsTest) {
 		var outOfSpace = false;
@@ -327,6 +327,131 @@
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
+	module.exports = TextCanvas;
+
+	var util = __webpack_require__(6);
+	var getText = __webpack_require__(17);
+	var TextCanvasState = __webpack_require__(18);
+	var TextAdditionTracker = __webpack_require__(19);
+
+	function TextCanvas(paper, x, y, lineHeight, styles) {
+		var that = this;
+		var lines = paper.set();
+		var nextLineY = y;
+		var textAdditionTracker = new TextAdditionTracker();
+
+		this.addLine = function addLine() {
+			var newLine = paper.text(x, nextLineY, '');
+			newLine.attr(styles);
+			lines.push(newLine);
+			nextLineY += lineHeight;
+			textAdditionTracker.newLineAdded();
+		};
+
+		this.addTextToLine = function addTextToLine(text) {
+			var currentLine = util.arrayLast(lines);
+			var currentText = getText(currentLine);
+			var newText = currentText + text;
+			setText(currentLine, newText);
+			textAdditionTracker.lastLineEdited();
+		};
+
+		this.restoreState = function restoreState(state) {
+			var newLineCount = state.getLineCount();
+			textAdditionTracker = new TextAdditionTracker(newLineCount);
+
+			var currentState = this.getState();
+			var currentLines = currentState.getLineTexts();
+			var targetLines = state.getLineTexts();
+
+			removeSurplusCurrentLines();
+			mutateCurrentLinesToMatchTargets();
+			addNewTargetLines();
+
+			function removeSurplusCurrentLines() {
+				var surplusCurrentLines = currentLines.length - targetLines.length;
+				if (surplusCurrentLines >= 1) {
+					for (var i = 0; i < surplusCurrentLines; i++) {
+						deleteLastLine();
+					}
+				}
+			}
+
+			function mutateCurrentLinesToMatchTargets() {
+				util.arrayForEach(lines, function(lineElement, index) {
+					var targetText = targetLines[index];
+					setText(lineElement, targetText);
+				});
+			}
+
+			function addNewTargetLines() {
+				var extraLinesToAdd = targetLines.length - currentLines.length;
+				var newLineText;
+				if (extraLinesToAdd >= 1) {
+					for (var i = 0; i < extraLinesToAdd; i++) {
+						newLineText = targetLines[currentLines.length];
+						this.addLine();
+						this.addTextToLine(newLineText);
+					}
+				}
+			}
+
+			function deleteLastLine() {
+				var currentLine = util.arrayLast(lines);
+				currentLine.remove(); // remove from canvas
+				lines.pop(); // remove from set
+				nextLineY -= lineHeight;			
+			};
+
+			// var lineTexts = state.getLineTexts();
+			// removeAllLines();
+			// util.arrayForEach(lineTexts, function(lineText){
+			// 	that.addLine();
+			// 	that.addTextToLine(lineText);
+			// });
+			// var newLineCount = state.getLineCount();
+			// textAdditionTracker = new TextAdditionTracker(newLineCount);
+		};
+
+		// this.getBBox = function getBBox() {
+		// 	return lines.getBBox();
+		// };
+
+		this.getChangedLinesBBox = function getChangedLinesBBox() {
+			var changedLines = paper.set();
+			var changedLineIndices = textAdditionTracker.getChangedLines();
+			util.arrayForEach(changedLineIndices, function(index){
+				changedLines.push(lines[index]);
+			});
+			return changedLines.getBBox();
+		};
+
+		this.getState = function getState() {
+			return new TextCanvasState(lines);
+		};
+
+		this.getElements = function getElements() {
+			return lines;
+		};
+
+		function removeAllLines() {
+			lines.remove();
+			// .remove() leaves handles to the elements within the set, so we reinitialize it
+			lines = paper.set(); 
+			nextLineY = y;
+		};
+
+		this.addLine(); // initialize with a first line available
+	}
+
+	function setText(element, newText) {
+		element.attr('text', newText);
+	}
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
 	module.exports = addWord;
 
 	function addWord(word, textCanvas) {
@@ -334,12 +459,12 @@
 	}
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addTruncatedWord;
 
-	var getTruncatedFormsLongestFirst = __webpack_require__(18);
+	var getTruncatedFormsLongestFirst = __webpack_require__(20);
 	var util = __webpack_require__(6);
 
 	function addTruncatedWord(word, textCanvas, boundsTest) {	
@@ -372,7 +497,7 @@
 	addTruncatedWord.truncatesWord = true;
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addSpaceThenWord;
@@ -382,7 +507,7 @@
 	}
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addBreakThenWord;
@@ -393,12 +518,12 @@
 	}
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = breakWithHyphenOnCurrentLine;
 
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(21);
 
 	function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
 		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
@@ -416,12 +541,12 @@
 	breakWithHyphenOnCurrentLine.truncatesWord = true;
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = breakWithHyphenOnNewLine;
 
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(21);
 
 	function breakWithHyphenOnNewLine(word, textCanvas, boundsTest) {
 		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
@@ -439,12 +564,12 @@
 	breakWithHyphenOnNewLine.truncatesWord = true;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = addSpaceAndTruncatedWord;
 
-	var addTruncatedWord = __webpack_require__(9);
+	var addTruncatedWord = __webpack_require__(10);
 
 	function addSpaceAndTruncatedWord(word, textCanvas, boundsTest) {
 		textCanvas.addTextToLine(' ');
@@ -461,13 +586,13 @@
 	addSpaceAndTruncatedWord.truncatesWord = true;
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = ellipsizePreviousWord;
 
-	var addSpaceAndTruncatedWord = __webpack_require__(14);
-	var addTruncatedWord = __webpack_require__(9);
+	var addSpaceAndTruncatedWord = __webpack_require__(15);
+	var addTruncatedWord = __webpack_require__(10);
 
 	function ellipsizePreviousWord(word, textCanvas, boundsTest, addedWords) {
 		var previousWords = addedWords.slice(0); // clone
@@ -502,122 +627,78 @@
 	}
 
 /***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = TextCanvas;
-
-	var util = __webpack_require__(6);
-	var getText = __webpack_require__(19);
-	var TextCanvasState = __webpack_require__(20);
-	var LineChangeTracker = __webpack_require__(21);
-
-	function TextCanvas(paper, x, y, lineHeight, styles) {
-		var that = this;
-		var lines = paper.set();
-		var nextLineY = y;
-		var lineChangeTracker = new LineChangeTracker();
-
-		this.addLine = function addLine() {
-			var newLine = paper.text(x, nextLineY, '');
-			newLine.attr(styles);
-			lines.push(newLine);
-			nextLineY += lineHeight;
-			lineChangeTracker.newLineAdded();
-		};
-
-		this.addTextToLine = function addTextToLine(text) {
-			var currentLine = util.arrayLast(lines);
-			var currentText = getText(currentLine);
-			var newText = currentText + text;
-			setText(currentLine, newText);
-			lineChangeTracker.lastLineEdited();
-		};
-
-		this.restoreState = function restoreState(state) {
-			var lineTexts = state.getLineTexts();
-			removeAllLines();
-			util.arrayForEach(lineTexts, function(lineText){
-				that.addLine();
-				that.addTextToLine(lineText);
-			});
-			var newLineCount = state.getLineCount();
-			lineChangeTracker = new LineChangeTracker(newLineCount);
-		};
-
-		this.getBBox = function getBBox() {
-			return lines.getBBox();
-		};
-
-		this.getChangedLinesBBox = function getChangedLinesBBox() {
-			var changedLines = paper.set();
-			var changedLineIndices = lineChangeTracker.getChangedLines();
-			util.arrayForEach(changedLineIndices, function(index){
-				changedLines.push(lines[index]);
-			});
-			return changedLines.getBBox();
-		};
-
-		this.getState = function getState() {
-			return new TextCanvasState(lines);
-		};
-
-		this.getElements = function getElements() {
-			return lines;
-		};
-
-		function removeAllLines() {
-			lines.remove();
-			// .remove() leaves handles to the elements within the set, so we reinitialize it
-			lines = paper.set(); 
-			nextLineY = y;
-		};
-
-		this.addLine(); // initialize with a first line available
-	}
-
-	function setText(element, newText) {
-		element.attr('text', newText);
-	}
-
-
-
-/***/ },
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = tryHyphenatedFormsUsingFormatter;
+	module.exports = getText;
 
-	var getBrokenForms = __webpack_require__(22);
-	var util = __webpack_require__(6);
-
-	function tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, hyphenationFormatter) {
-		var wordAddedSuccessfully = false;
-
-		if (word.length < 2) {
-			wordAddedSuccessfully = false;
-		} else {
-			var hyphenatedForms = getBrokenForms(word);
-			util.arrayForEach(hyphenatedForms, function(form){
-				if (wordAddedSuccessfully === false) {
-					hyphenationFormatter(form);
-					wordAddedSuccessfully = boundsTest();
-					rollbackIfUnsuccessful();
-				}
-			});
-		}
-
-		return wordAddedSuccessfully;
-
-		function rollbackIfUnsuccessful() {
-			if (wordAddedSuccessfully === false) {
-				textCanvas.restoreLastSavedState();
-			}
-		}
+	function getText(element) {
+		return element.attr('text');
 	}
 
 /***/ },
 /* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = TextCanvasState;
+
+	var util = __webpack_require__(6);
+	var getText = __webpack_require__(17);
+
+	function TextCanvasState(lines) {
+		var lineTexts = [];
+		util.arrayForEach(lines, function(line){
+			var lineText = getText(line);
+			lineTexts.push(lineText);
+		});
+
+		this.getLineTexts = function getLineTexts() {
+			return lineTexts.slice();
+		};
+
+		this.getLineCount = function getLineCount() {
+			return lineTexts.length;
+		};
+	}
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = TextAdditionTracker;
+
+	var util = __webpack_require__(6);
+
+	function TextAdditionTracker(initialLineCount) {
+		initialLineCount = initialLineCount || 0;
+		var lineChangedFlags = [];
+
+		for (var i = 0; i < initialLineCount; i++) {
+			lineChangedFlags.push(false);
+		}
+		
+		this.lastLineEdited = function lastLineEdited() {
+			var lastLineIndex = lineChangedFlags.length - 1;
+			lineChangedFlags[lastLineIndex] = true;
+		};
+
+		this.newLineAdded = function newLineAdded() {
+			lineChangedFlags.push(true);
+		};
+
+		this.getChangedLines = function getChangedLines() {
+			var changedLineIndices = [];
+			util.arrayForEach(lineChangedFlags, function(flag, index){
+				if (flag) {
+					changedLineIndices.push(index);
+				}
+			});
+			return changedLineIndices;
+		};
+	}
+
+/***/ },
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = getTruncatedFormsLongestFirst;
@@ -649,74 +730,37 @@
 	}
 
 /***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = getText;
-
-	function getText(element) {
-		return element.attr('text');
-	}
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = TextCanvasState;
-
-	var util = __webpack_require__(6);
-	var getText = __webpack_require__(19);
-
-	function TextCanvasState(lines) {
-		var lineTexts = [];
-		util.arrayForEach(lines, function(line){
-			var lineText = getText(line);
-			lineTexts.push(lineText);
-		});
-
-		this.getLineTexts = function getLineTexts() {
-			return lineTexts.slice();
-		};
-
-		this.getLineCount = function getLineCount() {
-			return lineTexts.length;
-		};
-	}
-
-/***/ },
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = LineChangeTracker;
+	module.exports = tryHyphenatedFormsUsingFormatter;
 
+	var getBrokenForms = __webpack_require__(22);
 	var util = __webpack_require__(6);
 
-	function LineChangeTracker(initialLineCount) {
-		initialLineCount = initialLineCount || 0;
-		var lineChangedFlags = [];
+	function tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, hyphenationFormatter) {
+		var wordAddedSuccessfully = false;
 
-		for (var i = 0; i < initialLineCount; i++) {
-			lineChangedFlags.push(false);
-		}
-		
-		this.lastLineEdited = function lastLineEdited() {
-			var lastLineIndex = lineChangedFlags.length - 1;
-			lineChangedFlags[lastLineIndex] = true;
-		};
-
-		this.newLineAdded = function newLineAdded() {
-			lineChangedFlags.push(true);
-		};
-
-		this.getChangedLines = function getChangedLines() {
-			var changedLineIndices = [];
-			util.arrayForEach(lineChangedFlags, function(flag, index){
-				if (flag) {
-					changedLineIndices.push(index);
+		if (word.length < 2) {
+			wordAddedSuccessfully = false;
+		} else {
+			var hyphenatedForms = getBrokenForms(word);
+			util.arrayForEach(hyphenatedForms, function(form){
+				if (wordAddedSuccessfully === false) {
+					hyphenationFormatter(form);
+					wordAddedSuccessfully = boundsTest();
+					rollbackIfUnsuccessful();
 				}
 			});
-			return changedLineIndices;
-		};
+		}
+
+		return wordAddedSuccessfully;
+
+		function rollbackIfUnsuccessful() {
+			if (wordAddedSuccessfully === false) {
+				textCanvas.restoreLastSavedState();
+			}
+		}
 	}
 
 /***/ },

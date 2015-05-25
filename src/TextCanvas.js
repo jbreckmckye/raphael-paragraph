@@ -3,20 +3,20 @@ module.exports = TextCanvas;
 var util = require('./util.js');
 var getText = require('./getText');
 var TextCanvasState = require('./TextCanvasState');
-var LineChangeTracker = require('./LineChangeTracker');
+var TextAdditionTracker = require('./TextAdditionTracker');
 
 function TextCanvas(paper, x, y, lineHeight, styles) {
 	var that = this;
 	var lines = paper.set();
 	var nextLineY = y;
-	var lineChangeTracker = new LineChangeTracker();
+	var textAdditionTracker = new TextAdditionTracker();
 
 	this.addLine = function addLine() {
 		var newLine = paper.text(x, nextLineY, '');
 		newLine.attr(styles);
 		lines.push(newLine);
 		nextLineY += lineHeight;
-		lineChangeTracker.newLineAdded();
+		textAdditionTracker.newLineAdded();
 	};
 
 	this.addTextToLine = function addTextToLine(text) {
@@ -24,27 +24,73 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		var currentText = getText(currentLine);
 		var newText = currentText + text;
 		setText(currentLine, newText);
-		lineChangeTracker.lastLineEdited();
+		textAdditionTracker.lastLineEdited();
 	};
 
 	this.restoreState = function restoreState(state) {
-		var lineTexts = state.getLineTexts();
-		removeAllLines();
-		util.arrayForEach(lineTexts, function(lineText){
-			that.addLine();
-			that.addTextToLine(lineText);
-		});
 		var newLineCount = state.getLineCount();
-		lineChangeTracker = new LineChangeTracker(newLineCount);
+		textAdditionTracker = new TextAdditionTracker(newLineCount);
+
+		var currentState = this.getState();
+		var currentLines = currentState.getLineTexts();
+		var targetLines = state.getLineTexts();
+
+		removeSurplusCurrentLines();
+		mutateCurrentLinesToMatchTargets();
+		addNewTargetLines();
+
+		function removeSurplusCurrentLines() {
+			var surplusCurrentLines = currentLines.length - targetLines.length;
+			if (surplusCurrentLines >= 1) {
+				for (var i = 0; i < surplusCurrentLines; i++) {
+					deleteLastLine();
+				}
+			}
+		}
+
+		function mutateCurrentLinesToMatchTargets() {
+			util.arrayForEach(lines, function(lineElement, index) {
+				var targetText = targetLines[index];
+				setText(lineElement, targetText);
+			});
+		}
+
+		function addNewTargetLines() {
+			var extraLinesToAdd = targetLines.length - currentLines.length;
+			var newLineText;
+			if (extraLinesToAdd >= 1) {
+				for (var i = 0; i < extraLinesToAdd; i++) {
+					newLineText = targetLines[currentLines.length];
+					this.addLine();
+					this.addTextToLine(newLineText);
+				}
+			}
+		}
+
+		function deleteLastLine() {
+			var currentLine = util.arrayLast(lines);
+			currentLine.remove(); // remove from canvas
+			lines.pop(); // remove from set
+			nextLineY -= lineHeight;			
+		};
+
+		// var lineTexts = state.getLineTexts();
+		// removeAllLines();
+		// util.arrayForEach(lineTexts, function(lineText){
+		// 	that.addLine();
+		// 	that.addTextToLine(lineText);
+		// });
+		// var newLineCount = state.getLineCount();
+		// textAdditionTracker = new TextAdditionTracker(newLineCount);
 	};
 
-	this.getBBox = function getBBox() {
-		return lines.getBBox();
-	};
+	// this.getBBox = function getBBox() {
+	// 	return lines.getBBox();
+	// };
 
 	this.getChangedLinesBBox = function getChangedLinesBBox() {
 		var changedLines = paper.set();
-		var changedLineIndices = lineChangeTracker.getChangedLines();
+		var changedLineIndices = textAdditionTracker.getChangedLines();
 		util.arrayForEach(changedLineIndices, function(index){
 			changedLines.push(lines[index]);
 		});
@@ -72,4 +118,3 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 function setText(element, newText) {
 	element.attr('text', newText);
 }
-
