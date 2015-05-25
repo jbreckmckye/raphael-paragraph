@@ -313,9 +313,9 @@
 	module.exports = linesFitBounds;
 
 	function linesFitBounds(startX, startY, textCanvas, maxWidth, maxHeight) {
-		var lineBox = textCanvas.getBBox();
-		var width = lineBox.x2 - lineBox.x;
-		var height = lineBox.y2 - lineBox.y;
+		var lineBox = textCanvas.getChangedLinesBBox();
+		var width = lineBox.x2 - startX;
+		var height = lineBox.y2 - startY;
 		if (width <= maxWidth && height <= maxHeight) {
 			return true;
 		} else {
@@ -339,7 +339,7 @@
 
 	module.exports = addTruncatedWord;
 
-	var getTruncatedFormsLongestFirst = __webpack_require__(17);
+	var getTruncatedFormsLongestFirst = __webpack_require__(18);
 	var util = __webpack_require__(6);
 
 	function addTruncatedWord(word, textCanvas, boundsTest) {	
@@ -398,7 +398,7 @@
 
 	module.exports = breakWithHyphenOnCurrentLine;
 
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(18);
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
 
 	function breakWithHyphenOnCurrentLine(word, textCanvas, boundsTest) {
 		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
@@ -421,7 +421,7 @@
 
 	module.exports = breakWithHyphenOnNewLine;
 
-	var tryHyphenatedFormsUsingFormatter = __webpack_require__(18);
+	var tryHyphenatedFormsUsingFormatter = __webpack_require__(17);
 
 	function breakWithHyphenOnNewLine(word, textCanvas, boundsTest) {
 		var wordAddedSuccessfully = tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, addBreakThenHyphenatedWord);
@@ -510,17 +510,20 @@
 	var util = __webpack_require__(6);
 	var getText = __webpack_require__(19);
 	var TextCanvasState = __webpack_require__(20);
+	var LineChangeTracker = __webpack_require__(21);
 
 	function TextCanvas(paper, x, y, lineHeight, styles) {
 		var that = this;
 		var lines = paper.set();
 		var nextLineY = y;
+		var lineChangeTracker = new LineChangeTracker();
 
 		this.addLine = function addLine() {
 			var newLine = paper.text(x, nextLineY, '');
 			newLine.attr(styles);
 			lines.push(newLine);
 			nextLineY += lineHeight;
+			lineChangeTracker.newLineAdded();
 		};
 
 		this.addTextToLine = function addTextToLine(text) {
@@ -528,6 +531,7 @@
 			var currentText = getText(currentLine);
 			var newText = currentText + text;
 			setText(currentLine, newText);
+			lineChangeTracker.lastLineEdited();
 		};
 
 		this.restoreState = function restoreState(state) {
@@ -537,10 +541,21 @@
 				that.addLine();
 				that.addTextToLine(lineText);
 			});
+			var newLineCount = state.getLineCount();
+			lineChangeTracker = new LineChangeTracker(newLineCount);
 		};
 
 		this.getBBox = function getBBox() {
 			return lines.getBBox();
+		};
+
+		this.getChangedLinesBBox = function getChangedLinesBBox() {
+			var changedLines = paper.set();
+			var changedLineIndices = lineChangeTracker.getChangedLines();
+			util.arrayForEach(changedLineIndices, function(index){
+				changedLines.push(lines[index]);
+			});
+			return changedLines.getBBox();
 		};
 
 		this.getState = function getState() {
@@ -565,8 +580,44 @@
 		element.attr('text', newText);
 	}
 
+
+
 /***/ },
 /* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = tryHyphenatedFormsUsingFormatter;
+
+	var getBrokenForms = __webpack_require__(22);
+	var util = __webpack_require__(6);
+
+	function tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, hyphenationFormatter) {
+		var wordAddedSuccessfully = false;
+
+		if (word.length < 2) {
+			wordAddedSuccessfully = false;
+		} else {
+			var hyphenatedForms = getBrokenForms(word);
+			util.arrayForEach(hyphenatedForms, function(form){
+				if (wordAddedSuccessfully === false) {
+					hyphenationFormatter(form);
+					wordAddedSuccessfully = boundsTest();
+					rollbackIfUnsuccessful();
+				}
+			});
+		}
+
+		return wordAddedSuccessfully;
+
+		function rollbackIfUnsuccessful() {
+			if (wordAddedSuccessfully === false) {
+				textCanvas.restoreLastSavedState();
+			}
+		}
+	}
+
+/***/ },
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = getTruncatedFormsLongestFirst;
@@ -598,40 +649,6 @@
 	}
 
 /***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = tryHyphenatedFormsUsingFormatter;
-
-	var getBrokenForms = __webpack_require__(21);
-	var util = __webpack_require__(6);
-
-	function tryHyphenatedFormsUsingFormatter(word, textCanvas, boundsTest, hyphenationFormatter) {
-		var wordAddedSuccessfully = false;
-
-		if (word.length < 2) {
-			wordAddedSuccessfully = false;
-		} else {
-			var hyphenatedForms = getBrokenForms(word);
-			util.arrayForEach(hyphenatedForms, function(form){
-				if (wordAddedSuccessfully === false) {
-					hyphenationFormatter(form);
-					wordAddedSuccessfully = boundsTest();
-					rollbackIfUnsuccessful();
-				}
-			});
-		}
-
-		return wordAddedSuccessfully;
-
-		function rollbackIfUnsuccessful() {
-			if (wordAddedSuccessfully === false) {
-				textCanvas.restoreLastSavedState();
-			}
-		}
-	}
-
-/***/ },
 /* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -660,10 +677,50 @@
 		this.getLineTexts = function getLineTexts() {
 			return lineTexts.slice();
 		};
+
+		this.getLineCount = function getLineCount() {
+			return lineTexts.length;
+		};
 	}
 
 /***/ },
 /* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = LineChangeTracker;
+
+	var util = __webpack_require__(6);
+
+	function LineChangeTracker(initialLineCount) {
+		initialLineCount = initialLineCount || 0;
+		var lineChangedFlags = [];
+
+		for (var i = 0; i < initialLineCount; i++) {
+			lineChangedFlags.push(false);
+		}
+		
+		this.lastLineEdited = function lastLineEdited() {
+			var lastLineIndex = lineChangedFlags.length - 1;
+			lineChangedFlags[lastLineIndex] = true;
+		};
+
+		this.newLineAdded = function newLineAdded() {
+			lineChangedFlags.push(true);
+		};
+
+		this.getChangedLines = function getChangedLines() {
+			var changedLineIndices = [];
+			util.arrayForEach(lineChangedFlags, function(flag, index){
+				if (flag) {
+					changedLineIndices.push(index);
+				}
+			});
+			return changedLineIndices;
+		};
+	}
+
+/***/ },
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = getBrokenForms;

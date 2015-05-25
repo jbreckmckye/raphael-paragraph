@@ -3,17 +3,20 @@ module.exports = TextCanvas;
 var util = require('./util.js');
 var getText = require('./getText');
 var TextCanvasState = require('./TextCanvasState');
+var LineChangeTracker = require('./LineChangeTracker');
 
 function TextCanvas(paper, x, y, lineHeight, styles) {
 	var that = this;
 	var lines = paper.set();
 	var nextLineY = y;
+	var lineChangeTracker = new LineChangeTracker();
 
 	this.addLine = function addLine() {
 		var newLine = paper.text(x, nextLineY, '');
 		newLine.attr(styles);
 		lines.push(newLine);
 		nextLineY += lineHeight;
+		lineChangeTracker.newLineAdded();
 	};
 
 	this.addTextToLine = function addTextToLine(text) {
@@ -21,6 +24,7 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 		var currentText = getText(currentLine);
 		var newText = currentText + text;
 		setText(currentLine, newText);
+		lineChangeTracker.lastLineEdited();
 	};
 
 	this.restoreState = function restoreState(state) {
@@ -30,10 +34,21 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 			that.addLine();
 			that.addTextToLine(lineText);
 		});
+		var newLineCount = state.getLineCount();
+		lineChangeTracker = new LineChangeTracker(newLineCount);
 	};
 
 	this.getBBox = function getBBox() {
 		return lines.getBBox();
+	};
+
+	this.getChangedLinesBBox = function getChangedLinesBBox() {
+		var changedLines = paper.set();
+		var changedLineIndices = lineChangeTracker.getChangedLines();
+		util.arrayForEach(changedLineIndices, function(index){
+			changedLines.push(lines[index]);
+		});
+		return changedLines.getBBox();
 	};
 
 	this.getState = function getState() {
@@ -57,3 +72,4 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 function setText(element, newText) {
 	element.attr('text', newText);
 }
+

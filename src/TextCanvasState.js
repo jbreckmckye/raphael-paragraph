@@ -13,4 +13,8 @@ function TextCanvasState(lines) {
 	this.getLineTexts = function getLineTexts() {
 		return lineTexts.slice();
 	};
+
+	this.getLineCount = function getLineCount() {
+		return lineTexts.length;
+	};
 }
