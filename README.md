@@ -44,6 +44,8 @@ This is simple - just take `dist/raphael-paragraph.js`, add it to your project a
 
 The distributable doesn't add anything to the global namespace - it just adds a `paragraph` method to `raphael.paper`.
 
+Minified and gzipped, Raphael-Paragraph is around a 2kb payload.
+
 
 ### Options
 
