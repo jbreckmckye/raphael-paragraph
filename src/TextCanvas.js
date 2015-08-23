@@ -61,8 +61,8 @@ function TextCanvas(paper, x, y, lineHeight, styles) {
 			if (extraLinesToAdd >= 1) {
 				for (var i = 0; i < extraLinesToAdd; i++) {
 					newLineText = targetLines[currentLines.length];
-					this.addLine();
-					this.addTextToLine(newLineText);
+					that.addLine();
+					that.addTextToLine(newLineText);
 				}
 			}
 		}
