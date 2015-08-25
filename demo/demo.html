@@ -16,10 +16,9 @@
 
         <script>
             // Some helper JS for the examples
-
             function createExample(canvasID, options) {
                 var canvas = document.getElementById(canvasID);
-                var canvasStyles = window.getComputedStyle(canvas);
+                var canvasStyles = window.getComputedStyle ? window.getComputedStyle(canvas) : canvas.currentStyle;
                 var canvasWidth = canvas.clientWidth - parseFloat(canvasStyles.paddingLeft) - parseFloat(canvasStyles.paddingRight);
                 var canvasHeight = canvas.clientHeight - parseFloat(canvasStyles.paddingTop) - parseFloat(canvasStyles.paddingBottom);
                 var paper = new Raphael(canvas, canvasWidth, canvasHeight);
