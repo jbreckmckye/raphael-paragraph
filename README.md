@@ -1,3 +1,5 @@
+(This project is old, not that well-written, and will only support bufixes going forward) 
+
 # Raphael-paragraph
 
 A plugin for Raphael.js that allows you to create paragraphs of multiline text with automatic word wrapping and vertical line spacing. The paragraphs are "real" Raphael element sets, and can be animated, stacked and evented like any others. Lengthy words are hyphenated and impossible-to-fit words are truncated with ellipses.
